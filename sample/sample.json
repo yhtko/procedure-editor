@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "cover": {
+    "title": "サンプル操作手順書",
+    "targetWork": "サンプルシステムへのログイン確認",
+    "audience": "業務担当者",
+    "systemName": "Sample System",
+    "account": "一般ユーザー権限",
+    "revision": "1.0",
+    "createdAt": "2026-06-22",
+    "updatedAt": "2026-06-22",
+    "author": "Procedure Editor",
+    "approver": "",
+    "purpose": "PC操作手順書の入力例です。",
+    "preparation": "ブラウザとログインアカウントを準備します。",
+    "notes": "実際の画面画像は各ブロックへ貼り付けてください。"
+  },
+  "steps": [
+    {
+      "id": "step_sample_1",
+      "title": "ログイン画面を開く",
+      "screen": "ログイン画面",
+      "summary": "対象システムのログイン画面をブラウザで開きます。",
+      "check": "URLが正しいことを確認します。",
+      "blocks": [
+        {
+          "id": "block_sample_1",
+          "title": "URLへアクセス",
+          "text": "ブラウザのアドレスバーに対象URLを入力して Enter を押します。\nhttps://example.com",
+          "image": "",
+          "imageName": "",
+          "annotations": []
+        }
+      ]
+    },
+    {
+      "id": "step_sample_2",
+      "title": "ログインする",
+      "screen": "認証画面",
+      "summary": "ユーザーIDとパスワードを入力します。",
+      "check": "ログイン後の画面が表示されることを確認します。",
+      "blocks": [
+        {
+          "id": "block_sample_2",
+          "title": "認証情報を入力",
+          "text": "ユーザーIDとパスワードを入力し、ログインボタンをクリックします。",
+          "image": "",
+          "imageName": "",
+          "annotations": []
+        }
+      ]
+    }
+  ]
+}

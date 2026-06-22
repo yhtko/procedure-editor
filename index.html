@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Procedure Editor</title>
+  <link rel="stylesheet" href="src/css/style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="title-group">
+        <h1>Procedure Editor</h1>
+        <p>PC操作手順書をローカルHTMLだけで作成します。</p>
+      </div>
+      <div class="header-actions no-print">
+        <span id="dirtyState" class="save-state" aria-live="polite">保存済み</span>
+        <button type="button" class="secondary" data-action="new-project">新規</button>
+        <label class="button secondary file-button">
+          JSON読込
+          <input id="jsonFileInput" type="file" accept="application/json,.json" />
+        </label>
+        <button type="button" class="secondary" data-action="export-json">JSON保存</button>
+        <button type="button" class="secondary" data-action="download-markdown">Markdown保存</button>
+        <button type="button" class="secondary" data-action="export-viewer">閲覧HTML出力</button>
+        <button type="button" data-action="print">PDF/印刷</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <nav class="tabs no-print" aria-label="編集タブ">
+      <button type="button" class="tab active" data-tab="cover">表紙</button>
+      <button type="button" class="tab" data-tab="steps">手順編集</button>
+      <button type="button" class="tab" data-tab="preview">プレビュー</button>
+      <button type="button" class="tab" data-tab="markdown">Markdown</button>
+    </nav>
+
+    <section id="coverTab" class="tab-panel pane">
+      <div class="pane-head">
+        <h2>表紙情報</h2>
+      </div>
+      <div class="cover-grid">
+        <label class="field">
+          <span>手順書名</span>
+          <input id="docTitle" type="text" data-cover-field="title" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>対象作業</span>
+          <input id="targetWork" type="text" data-cover-field="targetWork" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>対象者</span>
+          <input id="audience" type="text" data-cover-field="audience" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>使用システム</span>
+          <input id="systemName" type="text" data-cover-field="systemName" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>必要な権限・アカウント</span>
+          <input id="account" type="text" data-cover-field="account" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>版数</span>
+          <input id="revision" type="text" data-cover-field="revision" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>作成日</span>
+          <input id="createdAt" type="date" data-cover-field="createdAt" />
+        </label>
+        <label class="field">
+          <span>改訂日</span>
+          <input id="updatedAt" type="date" data-cover-field="updatedAt" />
+        </label>
+        <label class="field">
+          <span>作成者</span>
+          <input id="author" type="text" data-cover-field="author" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>承認者</span>
+          <input id="approver" type="text" data-cover-field="approver" autocomplete="off" />
+        </label>
+      </div>
+      <label class="field wide">
+        <span>目的</span>
+        <textarea id="purpose" data-cover-field="purpose"></textarea>
+      </label>
+      <label class="field wide">
+        <span>事前準備</span>
+        <textarea id="preparation" data-cover-field="preparation"></textarea>
+      </label>
+      <label class="field wide">
+        <span>注意事項</span>
+        <textarea id="notes" data-cover-field="notes"></textarea>
+      </label>
+    </section>
+
+    <section id="stepsTab" class="tab-panel hidden">
+      <div class="workspace-grid">
+        <aside class="pane step-pane no-print">
+          <div class="pane-head">
+            <h2>STEP一覧</h2>
+            <button type="button" data-action="add-step">STEP追加</button>
+          </div>
+          <div id="stepList" class="step-list" aria-live="polite"></div>
+        </aside>
+
+        <section class="pane editor-pane">
+          <div id="noStep" class="empty-state">
+            左の「STEP追加」から手順を作成してください。
+          </div>
+          <div id="stepEditor" class="hidden">
+            <div class="editor-head">
+              <label class="field">
+                <span>STEPタイトル</span>
+                <input id="stepTitle" type="text" data-step-field="title" autocomplete="off" />
+              </label>
+              <label class="field">
+                <span>画面名</span>
+                <input id="screenName" type="text" data-step-field="screen" autocomplete="off" />
+              </label>
+            </div>
+            <label class="field wide">
+              <span>STEP概要</span>
+              <textarea id="stepSummary" data-step-field="summary"></textarea>
+            </label>
+            <label class="field wide">
+              <span>注意・確認ポイント</span>
+              <textarea id="stepCheck" data-step-field="check"></textarea>
+            </label>
+            <div class="section-toolbar no-print">
+              <h3>説明ブロック</h3>
+              <div class="toolbar-actions">
+                <button type="button" data-action="add-block">ブロック追加</button>
+                <button type="button" class="secondary" data-action="move-step" data-dir="-1">STEP上へ</button>
+                <button type="button" class="secondary" data-action="move-step" data-dir="1">STEP下へ</button>
+                <button type="button" class="danger" data-action="delete-step">STEP削除</button>
+              </div>
+            </div>
+            <div id="blockList" class="block-list"></div>
+          </div>
+        </section>
+
+        <aside class="pane sort-pane no-print">
+          <div class="pane-head">
+            <h2>ブロック並び替え</h2>
+          </div>
+          <p class="hint">ドラッグ&ドロップで現在のSTEP内の順序を変更できます。</p>
+          <div id="sortList" class="sort-list"></div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="previewTab" class="tab-panel pane hidden">
+      <div id="previewArea" class="preview"></div>
+    </section>
+
+    <section id="markdownTab" class="tab-panel pane hidden">
+      <div class="pane-head">
+        <h2>Markdown</h2>
+        <button type="button" class="secondary no-print" data-action="copy-markdown">コピー</button>
+      </div>
+      <textarea id="markdownOutput" class="markdown-output" readonly></textarea>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script src="src/js/utils.js" defer></script>
+  <script src="src/js/state.js" defer></script>
+  <script src="src/js/annotations.js" defer></script>
+  <script src="src/js/export.js" defer></script>
+  <script src="src/js/viewerExport.js" defer></script>
+  <script src="src/js/render.js" defer></script>
+  <script src="src/js/blocks.js" defer></script>
+  <script src="src/js/app.js" defer></script>
+</body>
+</html>
