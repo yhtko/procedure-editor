@@ -628,7 +628,7 @@ body.annotation-modal-open {
   color: #fff;
 }
 
-.marker-color-picker {
+.annotation-color-picker {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -636,7 +636,7 @@ body.annotation-modal-open {
   border-left: 1px solid var(--border);
 }
 
-.marker-color-button {
+.annotation-color-button {
   width: 30px;
   height: 30px;
   padding: 0;
@@ -645,7 +645,7 @@ body.annotation-modal-open {
   background: #fff;
 }
 
-.marker-color-button span {
+.annotation-color-button span {
   display: block;
   width: 16px;
   height: 16px;
@@ -654,7 +654,7 @@ body.annotation-modal-open {
   border: 1px solid rgba(15, 23, 42, 0.18);
 }
 
-.marker-color-button.active {
+.annotation-color-button.active {
   border-color: #111827;
 }
 
@@ -699,6 +699,10 @@ body.annotation-modal-open {
 }
 
 .annotation-editor {
+  cursor: default;
+}
+
+.annotation-editor.placing {
   cursor: crosshair;
 }
 
@@ -777,7 +781,7 @@ body.annotation-modal-open {
 }
 
 .annotation-arrow line {
-  stroke-width: 2.2;
+  stroke-width: 3;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
 }

@@ -108,8 +108,8 @@
       return [
         '<div class="annotation annotation-arrow" style="left:' + geometry.left.toFixed(3) + '%;top:' + geometry.top.toFixed(3) + '%;width:' + geometry.width.toFixed(3) + '%;height:' + geometry.height.toFixed(3) + '%;color:' + color + ';">',
         '<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">',
-        '<defs><marker id="' + utils.escapeAttribute(markerId) + '" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">',
-        '<path d="M0,0 L6,3 L0,6 Z" fill="' + color + '"></path>',
+        '<defs><marker id="' + utils.escapeAttribute(markerId) + '" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">',
+        '<path d="M0,0 L8,4 L0,8 Z" fill="' + color + '"></path>',
         '</marker></defs>',
         '<line x1="' + geometry.x1.toFixed(3) + '" y1="' + geometry.y1.toFixed(3) + '" x2="' + geometry.x2.toFixed(3) + '" y2="' + geometry.y2.toFixed(3) + '" stroke="' + color + '" marker-end="url(#' + utils.escapeAttribute(markerId) + ')"></line>',
         '</svg></div>'
@@ -136,7 +136,7 @@
       ".viewer-callout{margin:18px 0;padding:13px 15px;border:1px solid #f6d88a;border-left:5px solid #d97706;border-radius:8px;background:#fffbeb}.viewer-callout h2,.viewer-callout h4{margin:0 0 7px;color:#7c2d12;font-size:16px}.viewer-callout p{margin:0}",
       ".viewer-step{margin-top:30px;padding-top:16px;border-top:3px solid #1e293b}.viewer-block{margin:18px 0 24px}.viewer-block h4{margin:0 0 8px}",
       ".viewer-image-frame{display:inline-block;max-width:100%;margin:10px 0 0;cursor:zoom-in}.viewer-image-frame figcaption{margin-top:4px;color:#667085;font-size:12px}.annotated-image{position:relative;display:inline-block;line-height:0;max-width:100%}.annotated-image img{display:block;max-width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff}",
-      ".annotation{position:absolute;min-width:14px;min-height:14px;color:#ef4444;line-height:1}.annotation-circle,.annotation-number{min-width:0;min-height:0;height:auto;aspect-ratio:1/1;border-radius:50%}.annotation-circle{border:3px solid currentColor;background:transparent}.annotation-marker{border:3px solid currentColor;background:color-mix(in srgb,currentColor 18%,transparent);border-radius:0}.annotation-number{display:flex;align-items:center;justify-content:center;border:2px solid #fff;background:currentColor;box-shadow:0 1px 7px rgba(15,23,42,.32)}.annotation-number span{color:#fff;font-weight:700;font-size:clamp(12px,2.6vw,30px);line-height:1}.annotation-arrow{overflow:visible}.annotation-arrow svg{display:block;width:100%;height:100%;overflow:visible}.annotation-arrow line{stroke-width:2.2;stroke-linecap:round;vector-effect:non-scaling-stroke}",
+      ".annotation{position:absolute;min-width:14px;min-height:14px;color:#ef4444;line-height:1}.annotation-circle,.annotation-number{min-width:0;min-height:0;height:auto;aspect-ratio:1/1;border-radius:50%}.annotation-circle{border:3px solid currentColor;background:transparent}.annotation-marker{border:3px solid currentColor;background:color-mix(in srgb,currentColor 18%,transparent);border-radius:0}.annotation-number{display:flex;align-items:center;justify-content:center;border:2px solid #fff;background:currentColor;box-shadow:0 1px 7px rgba(15,23,42,.32)}.annotation-number span{color:#fff;font-weight:700;font-size:clamp(12px,2.6vw,30px);line-height:1}.annotation-arrow{overflow:visible}.annotation-arrow svg{display:block;width:100%;height:100%;overflow:visible}.annotation-arrow line{stroke-width:3;stroke-linecap:round;vector-effect:non-scaling-stroke}",
       ".image-modal{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;padding:40px;background:rgba(15,23,42,.78)}.image-modal.open{display:flex}.modal-body{max-width:96vw;max-height:92vh;overflow:auto}.modal-body .viewer-image-frame{cursor:default}.modal-body img{max-width:92vw;max-height:86vh}.modal-close{position:absolute;right:18px;top:14px;border:0;border-radius:6px;background:#fff;color:#172033;font-size:28px;line-height:1;padding:4px 11px;cursor:pointer}",
       ".empty{color:#667085}",
       "@media(max-width:820px){.viewer-header{align-items:flex-start;flex-direction:column}.viewer-main{grid-template-columns:1fr}.toc{position:static}#searchBox{width:100%}.content{padding:18px}}",
@@ -153,7 +153,7 @@
     annotation.x1 = utils.clamp(annotation.x1, 0, 100);
     annotation.y1 = utils.clamp(annotation.y1, 0, 100);
     annotation.x2 = utils.clamp(annotation.x2, 0, 100);
-    annotation.y2 = annotation.y1;
+    annotation.y2 = utils.clamp(annotation.y2, 0, 100);
   }
 
   function viewerArrowGeometry(annotation) {

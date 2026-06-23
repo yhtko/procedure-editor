@@ -7,12 +7,12 @@
   let dragState = null;
   let modalBlockId = null;
   let placementState = null;
-  let markerColor = "#2563eb";
+  let annotationColor = "#ef4444";
 
-  const MARKER_COLORS = [
-    { name: "青", value: "#2563eb" },
-    { name: "赤", value: "#ef4444" },
-    { name: "黄", value: "#facc15" }
+  const ANNOTATION_COLORS = [
+    { name: "Blue", value: "#2563eb" },
+    { name: "Red", value: "#ef4444" },
+    { name: "Yellow", value: "#facc15" }
   ];
 
   function nextNumberLabel(block) {
@@ -89,15 +89,15 @@
     refreshAnnotationViews();
   }
 
-  function setMarkerColor(color, blockId) {
-    const nextColor = normalizeMarkerColor(color);
+  function setAnnotationColor(color, blockId) {
+    const nextColor = normalizeAnnotationColor(color);
     const found = state.findBlockById(blockId || state.store.currentBlockId);
 
-    markerColor = nextColor;
+    annotationColor = nextColor;
 
     if (found && state.store.selectedAnnotationId) {
       const annotation = state.findAnnotation(found.block, state.store.selectedAnnotationId);
-      if (annotation && annotation.type === "marker") {
+      if (annotation) {
         annotation.color = nextColor;
         state.markDirty();
         refreshAnnotationViews();
@@ -184,7 +184,7 @@
       annotationToolButton(block, "arrow", "矢印"),
       annotationToolButton(block, "number", "番号"),
       annotationToolButton(block, "marker", "マーカー"),
-      markerColorButtons(block),
+      annotationColorButtons(block),
       '<button type="button" class="danger" data-action="delete-annotation" data-block-id="' + utils.escapeAttribute(block.id) + '">選択注釈を削除</button>',
       '</div>',
 
@@ -209,18 +209,18 @@
     ].join("");
   }
 
-  function markerColorButtons(block) {
+  function annotationColorButtons(block) {
     const selected = state.findAnnotation(block, state.store.selectedAnnotationId);
-    const currentColor = selected && selected.type === "marker"
-      ? selected.color || markerColor
-      : markerColor;
+    const currentColor = selected
+      ? selected.color || annotationColor
+      : annotationColor;
 
     return [
-      '<div class="marker-color-picker" role="group" aria-label="マーカー色">'
-    ].concat(MARKER_COLORS.map(function (color) {
+      '<div class="annotation-color-picker" role="group" aria-label="注釈色">'
+    ].concat(ANNOTATION_COLORS.map(function (color) {
       const active = currentColor.toLowerCase() === color.value.toLowerCase();
       return [
-        '<button type="button" class="marker-color-button' + (active ? " active" : "") + '" data-action="set-marker-color" data-color="' + utils.escapeAttribute(color.value) + '" data-block-id="' + utils.escapeAttribute(block.id) + '" aria-label="マーカー色 ' + utils.escapeAttribute(color.name) + '" title="' + utils.escapeAttribute(color.name) + '">',
+        '<button type="button" class="annotation-color-button' + (active ? " active" : "") + '" data-action="set-annotation-color" data-color="' + utils.escapeAttribute(color.value) + '" data-block-id="' + utils.escapeAttribute(block.id) + '" aria-label="注釈色 ' + utils.escapeAttribute(color.name) + '" title="' + utils.escapeAttribute(color.name) + '">',
         '<span style="background:' + utils.escapeAttribute(color.value) + ';"></span>',
         '</button>'
       ].join("");
@@ -245,7 +245,8 @@
     if (!block || !block.image) return "";
 
     const editable = mode === "editor";
-    const classes = "annotated-image annotation-canvas" + (editable ? " annotation-editor" : "");
+    const placing = editable && placementState && placementState.blockId === block.id;
+    const classes = "annotated-image annotation-canvas" + (editable ? " annotation-editor" : "") + (placing ? " placing" : "");
 
     const annotations = (block.annotations || []).map(function (annotation) {
       return annotationMarkup(block, annotation, mode);
@@ -319,8 +320,8 @@
       '<div class="' + className + '"' + data + ' style="left:' + geometry.left.toFixed(3) + '%;top:' + geometry.top.toFixed(3) + '%;width:' + geometry.width.toFixed(3) + '%;height:' + geometry.height.toFixed(3) + '%;color:' + utils.escapeAttribute(color) + ';" aria-label="矢印注釈">',
       '<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">',
       '<defs>',
-      '<marker id="' + utils.escapeAttribute(markerId) + '" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">',
-      '<path d="M0,0 L6,3 L0,6 Z" fill="' + utils.escapeAttribute(color) + '"></path>',
+      '<marker id="' + utils.escapeAttribute(markerId) + '" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">',
+      '<path d="M0,0 L8,4 L0,8 Z" fill="' + utils.escapeAttribute(color) + '"></path>',
       '</marker>',
       '</defs>',
       '<line x1="' + geometry.x1.toFixed(3) + '" y1="' + geometry.y1.toFixed(3) + '" x2="' + geometry.x2.toFixed(3) + '" y2="' + geometry.y2.toFixed(3) + '" stroke="' + utils.escapeAttribute(color) + '" marker-end="url(#' + utils.escapeAttribute(markerId) + ')"></line>',
@@ -380,6 +381,11 @@
 
         return handlePlacementClick(event, canvasForPlacement, placementBlockId);
       }
+    }
+
+    if (placementState && !event.target.closest(".annotation-modal-toolbar")) {
+      cancelPlacement();
+      return false;
     }
 
     const annotationEl = event.target.closest(".annotation.editable");
@@ -475,7 +481,7 @@
       const arrow = dragState.annotation;
 
       arrow.x2 = point.x;
-      arrow.y2 = arrow.y1;
+      arrow.y2 = point.y;
 
       state.markDirty();
       if (dragState.element) updateArrowElement(dragState.element, arrow);
@@ -537,6 +543,8 @@
     event.preventDefault();
 
     if (dragState.mode === "marker-create") {
+      const blockId = dragState.blockId;
+
       if (dragState.element) {
         try {
           dragState.element.releasePointerCapture(event.pointerId);
@@ -546,11 +554,14 @@
       }
 
       dragState = null;
+      placementState = createPlacementState("marker", blockId);
       refreshAnnotationViews();
       return true;
     }
 
     if (dragState.mode === "arrow-create") {
+      const blockId = dragState.blockId;
+
       if (dragState.element) {
         try {
           dragState.element.releasePointerCapture(event.pointerId);
@@ -573,6 +584,7 @@
       }
 
       dragState = null;
+      placementState = createPlacementState("arrow", blockId);
       refreshAnnotationViews();
       return true;
     }
@@ -610,11 +622,12 @@
       annotation.y = utils.clamp(point.y - heightPercent / 2, 0, 100 - heightPercent);
       annotation.w = size;
       annotation.h = size;
+      annotation.color = annotationColor;
 
       found.block.annotations.push(annotation);
       state.store.selectedAnnotationId = annotation.id;
 
-      placementState = null;
+      placementState = createPlacementState(placementState.type, blockId);
       state.markDirty();
       refreshAnnotationViews();
 
@@ -638,6 +651,7 @@
     annotation.y1 = point.y;
     annotation.x2 = point.x;
     annotation.y2 = point.y;
+    annotation.color = annotationColor;
 
     found.block.annotations.push(annotation);
     state.store.selectedAnnotationId = annotation.id;
@@ -688,7 +702,7 @@
     annotation.y = utils.clamp(point.y - 2, 0, 96);
     annotation.w = 1;
     annotation.h = 4;
-    annotation.color = markerColor;
+    annotation.color = annotationColor;
 
     found.block.annotations.push(annotation);
     state.store.selectedAnnotationId = annotation.id;
@@ -740,14 +754,12 @@
     if (dragState.mode === "arrow-start") {
       annotation.x1 = utils.clamp(dragState.original.x1 + dx, 0, 100);
       annotation.y1 = utils.clamp(dragState.original.y1 + dy, 0, 100);
-      annotation.y2 = annotation.y1;
       return;
     }
 
     if (dragState.mode === "arrow-end") {
       annotation.x2 = utils.clamp(dragState.original.x2 + dx, 0, 100);
       annotation.y2 = utils.clamp(dragState.original.y2 + dy, 0, 100);
-      annotation.y1 = annotation.y2;
       return;
     }
 
@@ -772,7 +784,7 @@
     annotation.x1 = utils.clamp(nextX1 + adjustX, 0, 100);
     annotation.y1 = utils.clamp(nextY1 + adjustY, 0, 100);
     annotation.x2 = utils.clamp(nextX2 + adjustX, 0, 100);
-    annotation.y2 = annotation.y1;
+    annotation.y2 = utils.clamp(nextY2 + adjustY, 0, 100);
   }
 
   function updateArrowElement(element, annotation) {
@@ -873,7 +885,7 @@
       annotation.x1 = utils.clamp(annotation.x1, 0, 100);
       annotation.y1 = utils.clamp(annotation.y1, 0, 100);
       annotation.x2 = utils.clamp(annotation.x2, 0, 100);
-      annotation.y2 = annotation.y1;
+      annotation.y2 = utils.clamp(annotation.y2, 0, 100);
     }
   }
 
@@ -898,12 +910,32 @@
     return Math.min(maxW, maxByHeight);
   }
 
-  function normalizeMarkerColor(color) {
+  function createPlacementState(type, blockId) {
+    return {
+      type: type,
+      blockId: blockId,
+      arrowStart: null,
+      markerStart: null
+    };
+  }
+
+  function cancelPlacement() {
+    if (!placementState) return false;
+    placementState = null;
+    if (modalBlockId) {
+      renderAnnotationModal();
+    } else {
+      ns.render.renderEditor();
+    }
+    return true;
+  }
+
+  function normalizeAnnotationColor(color) {
     const value = String(color || "").toLowerCase();
-    const found = MARKER_COLORS.find(function (item) {
+    const found = ANNOTATION_COLORS.find(function (item) {
       return item.value.toLowerCase() === value;
     });
-    return found ? found.value : MARKER_COLORS[0].value;
+    return found ? found.value : ANNOTATION_COLORS[1].value;
   }
 
   function arrowGeometry(annotation) {
@@ -934,7 +966,8 @@
     deleteSelectedAnnotation: deleteSelectedAnnotation,
     openAnnotationModal: openAnnotationModal,
     closeAnnotationModal: closeAnnotationModal,
-    setMarkerColor: setMarkerColor,
+    setAnnotationColor: setAnnotationColor,
+    cancelPlacement: cancelPlacement,
     imageMarkup: imageMarkup,
     handlePointerDown: handlePointerDown,
     handlePointerMove: handlePointerMove,

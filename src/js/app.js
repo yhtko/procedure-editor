@@ -93,8 +93,8 @@
         case "add-annotation":
           ns.annotations.addAnnotation(actionNode.dataset.type, actionNode.dataset.blockId);
           return;
-        case "set-marker-color":
-          ns.annotations.setMarkerColor(actionNode.dataset.color, actionNode.dataset.blockId);
+        case "set-annotation-color":
+          ns.annotations.setAnnotationColor(actionNode.dataset.color, actionNode.dataset.blockId);
           return;
         case "delete-annotation":
           state.store.currentBlockId = actionNode.dataset.blockId;
@@ -211,6 +211,7 @@
 
   function handleKeyDown(event) {
     if (event.key === "Escape") {
+      if (ns.annotations.cancelPlacement()) return;
       ns.annotations.closeAnnotationModal();
     }
   }
