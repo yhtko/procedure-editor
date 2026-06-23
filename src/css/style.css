@@ -709,6 +709,11 @@ body.annotation-modal-open {
 .annotation {
   touch-action: none;
   box-sizing: border-box;
+  pointer-events: none;
+}
+
+.annotation.editable {
+  pointer-events: auto;
 }
 
 .annotation.selected {
@@ -768,9 +773,13 @@ body.annotation-modal-open {
 
 .annotation-arrow {
   position: absolute;
-  pointer-events: auto;
+  pointer-events: none;
   cursor: move;
   overflow: visible;
+}
+
+.annotation-arrow.editable {
+  pointer-events: auto;
 }
 
 .annotation-arrow svg {
@@ -784,17 +793,6 @@ body.annotation-modal-open {
   stroke-width: 3;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
-}
-
-.arrow-head {
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-top: 8px solid transparent;
-  border-bottom: 8px solid transparent;
-  border-left: 14px solid currentColor;
-  pointer-events: none;
-  z-index: 8;
 }
 
 .arrow-point {

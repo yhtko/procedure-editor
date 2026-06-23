@@ -244,7 +244,7 @@
   function imageMarkup(block, mode) {
     if (!block || !block.image) return "";
 
-    const editable = mode === "editor";
+    const editable = mode === "editor" && modalBlockId === block.id;
     const placing = editable && placementState && placementState.blockId === block.id;
     const classes = "annotated-image annotation-canvas" + (editable ? " annotation-editor" : "") + (placing ? " placing" : "");
 
@@ -265,8 +265,8 @@
   function annotationMarkup(block, annotation, mode) {
     normalizeAnnotation(annotation);
 
-    const selected = mode === "editor" && state.store.selectedAnnotationId === annotation.id;
-    const editable = mode === "editor";
+    const editable = mode === "editor" && modalBlockId === block.id;
+    const selected = editable && state.store.selectedAnnotationId === annotation.id;
 
     const className = [
       "annotation",
@@ -307,8 +307,8 @@
   function arrowMarkup(annotation, className, data, mode, editable, selected) {
     const color = annotation.color || "#ef4444";
     const geometry = arrowGeometry(annotation);
-    const angle = arrowAngle(geometry);
-    const head = '<span class="arrow-head" style="left:' + geometry.x2.toFixed(3) + '%;top:' + geometry.y2.toFixed(3) + '%;transform:translate(-78%, -50%) rotate(' + angle.toFixed(3) + 'deg);"></span>';
+    const lineEnd = arrowLineEnd(geometry);
+    const headPoints = arrowHeadPoints(geometry);
 
     const handles = editable && selected
       ? [
@@ -320,9 +320,9 @@
     return [
       '<div class="' + className + '"' + data + ' style="left:' + geometry.left.toFixed(3) + '%;top:' + geometry.top.toFixed(3) + '%;width:' + geometry.width.toFixed(3) + '%;height:' + geometry.height.toFixed(3) + '%;color:' + utils.escapeAttribute(color) + ';" aria-label="矢印注釈">',
       '<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">',
-      '<line x1="' + geometry.x1.toFixed(3) + '" y1="' + geometry.y1.toFixed(3) + '" x2="' + geometry.x2.toFixed(3) + '" y2="' + geometry.y2.toFixed(3) + '" stroke="' + utils.escapeAttribute(color) + '"></line>',
+      '<line x1="' + geometry.x1.toFixed(3) + '" y1="' + geometry.y1.toFixed(3) + '" x2="' + lineEnd.x.toFixed(3) + '" y2="' + lineEnd.y.toFixed(3) + '" stroke="' + utils.escapeAttribute(color) + '"></line>',
+      '<polygon points="' + headPoints + '" fill="' + utils.escapeAttribute(color) + '"></polygon>',
       '</svg>',
-      head,
       handles,
       '</div>'
     ].join("");
@@ -786,7 +786,9 @@
 
   function updateArrowElement(element, annotation) {
     const geometry = arrowGeometry(annotation);
+    const lineEnd = arrowLineEnd(geometry);
     const line = element.querySelector("line");
+    const head = element.querySelector("polygon");
 
     element.style.left = geometry.left.toFixed(3) + "%";
     element.style.top = geometry.top.toFixed(3) + "%";
@@ -796,18 +798,15 @@
     if (line) {
       line.setAttribute("x1", geometry.x1.toFixed(3));
       line.setAttribute("y1", geometry.y1.toFixed(3));
-      line.setAttribute("x2", geometry.x2.toFixed(3));
-      line.setAttribute("y2", geometry.y2.toFixed(3));
+      line.setAttribute("x2", lineEnd.x.toFixed(3));
+      line.setAttribute("y2", lineEnd.y.toFixed(3));
     }
 
     const start = element.querySelector(".arrow-start");
     const end = element.querySelector(".arrow-end");
-    const head = element.querySelector(".arrow-head");
 
     if (head) {
-      head.style.left = geometry.x2.toFixed(3) + "%";
-      head.style.top = geometry.y2.toFixed(3) + "%";
-      head.style.transform = "translate(-78%, -50%) rotate(" + arrowAngle(geometry).toFixed(3) + "deg)";
+      head.setAttribute("points", arrowHeadPoints(geometry));
     }
 
     if (start) {
@@ -952,11 +951,13 @@
     const minY = Math.min(annotation.y1, annotation.y2);
     const maxX = Math.max(annotation.x1, annotation.x2);
     const maxY = Math.max(annotation.y1, annotation.y2);
-    const pad = 2;
-    const left = utils.clamp(minX - pad, 0, 100);
-    const top = utils.clamp(minY - pad, 0, 100);
-    const width = utils.clamp((maxX - minX) + pad * 2, 3, 100 - left);
-    const height = utils.clamp((maxY - minY) + pad * 2, 3, 100 - top);
+    const pad = 3;
+    const width = Math.min(Math.max((maxX - minX) + pad * 2, 8), 100);
+    const height = Math.min(Math.max((maxY - minY) + pad * 2, 8), 100);
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    const left = utils.clamp(centerX - width / 2, 0, 100 - width);
+    const top = utils.clamp(centerY - height / 2, 0, 100 - height);
 
     return {
       left: left,
@@ -970,8 +971,47 @@
     };
   }
 
-  function arrowAngle(geometry) {
-    return Math.atan2(geometry.y2 - geometry.y1, geometry.x2 - geometry.x1) * 180 / Math.PI;
+  function arrowVector(geometry) {
+    const dx = geometry.x2 - geometry.x1;
+    const dy = geometry.y2 - geometry.y1;
+    const length = Math.max(Math.hypot(dx, dy), 0.001);
+
+    return {
+      x: dx / length,
+      y: dy / length
+    };
+  }
+
+  function arrowHeadSize(geometry) {
+    return {
+      length: utils.clamp((1.8 / geometry.width) * 100, 5, 22),
+      half: utils.clamp((1.2 / geometry.height) * 100, 7, 18)
+    };
+  }
+
+  function arrowLineEnd(geometry) {
+    const vector = arrowVector(geometry);
+    const size = arrowHeadSize(geometry);
+
+    return {
+      x: geometry.x2 - vector.x * size.length * 0.72,
+      y: geometry.y2 - vector.y * size.length * 0.72
+    };
+  }
+
+  function arrowHeadPoints(geometry) {
+    const vector = arrowVector(geometry);
+    const size = arrowHeadSize(geometry);
+    const baseX = geometry.x2 - vector.x * size.length;
+    const baseY = geometry.y2 - vector.y * size.length;
+    const perpendicularX = -vector.y;
+    const perpendicularY = vector.x;
+
+    return [
+      geometry.x2.toFixed(3) + "," + geometry.y2.toFixed(3),
+      (baseX + perpendicularX * size.half).toFixed(3) + "," + (baseY + perpendicularY * size.half).toFixed(3),
+      (baseX - perpendicularX * size.half).toFixed(3) + "," + (baseY - perpendicularY * size.half).toFixed(3)
+    ].join(" ");
   }
 
   ns.annotations = {

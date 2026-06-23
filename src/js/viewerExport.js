@@ -102,16 +102,15 @@
   function viewerAnnotationMarkup(annotation) {
     const color = utils.escapeAttribute(annotation.color || "#ef4444");
     if (annotation.type === "arrow") {
-      const markerId = "viewer_arrow_" + annotation.id;
       normalizeViewerArrow(annotation);
       const geometry = viewerArrowGeometry(annotation);
+      const lineEnd = viewerArrowLineEnd(geometry);
+      const headPoints = viewerArrowHeadPoints(geometry);
       return [
         '<div class="annotation annotation-arrow" style="left:' + geometry.left.toFixed(3) + '%;top:' + geometry.top.toFixed(3) + '%;width:' + geometry.width.toFixed(3) + '%;height:' + geometry.height.toFixed(3) + '%;color:' + color + ';">',
         '<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">',
-        '<defs><marker id="' + utils.escapeAttribute(markerId) + '" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">',
-        '<path d="M0,0 L8,4 L0,8 Z" fill="' + color + '"></path>',
-        '</marker></defs>',
-        '<line x1="' + geometry.x1.toFixed(3) + '" y1="' + geometry.y1.toFixed(3) + '" x2="' + geometry.x2.toFixed(3) + '" y2="' + geometry.y2.toFixed(3) + '" stroke="' + color + '" marker-end="url(#' + utils.escapeAttribute(markerId) + ')"></line>',
+        '<line x1="' + geometry.x1.toFixed(3) + '" y1="' + geometry.y1.toFixed(3) + '" x2="' + lineEnd.x.toFixed(3) + '" y2="' + lineEnd.y.toFixed(3) + '" stroke="' + color + '"></line>',
+        '<polygon points="' + headPoints + '" fill="' + color + '"></polygon>',
         '</svg></div>'
       ].join("");
     }
@@ -161,11 +160,13 @@
     const minY = Math.min(annotation.y1, annotation.y2);
     const maxX = Math.max(annotation.x1, annotation.x2);
     const maxY = Math.max(annotation.y1, annotation.y2);
-    const pad = 2;
-    const left = utils.clamp(minX - pad, 0, 100);
-    const top = utils.clamp(minY - pad, 0, 100);
-    const width = utils.clamp((maxX - minX) + pad * 2, 3, 100 - left);
-    const height = utils.clamp((maxY - minY) + pad * 2, 3, 100 - top);
+    const pad = 3;
+    const width = Math.min(Math.max((maxX - minX) + pad * 2, 8), 100);
+    const height = Math.min(Math.max((maxY - minY) + pad * 2, 8), 100);
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    const left = utils.clamp(centerX - width / 2, 0, 100 - width);
+    const top = utils.clamp(centerY - height / 2, 0, 100 - height);
 
     return {
       left: left,
@@ -177,6 +178,49 @@
       x2: ((annotation.x2 - left) / width) * 100,
       y2: ((annotation.y2 - top) / height) * 100
     };
+  }
+
+  function viewerArrowVector(geometry) {
+    const dx = geometry.x2 - geometry.x1;
+    const dy = geometry.y2 - geometry.y1;
+    const length = Math.max(Math.hypot(dx, dy), 0.001);
+
+    return {
+      x: dx / length,
+      y: dy / length
+    };
+  }
+
+  function viewerArrowHeadSize(geometry) {
+    return {
+      length: utils.clamp((1.8 / geometry.width) * 100, 5, 22),
+      half: utils.clamp((1.2 / geometry.height) * 100, 7, 18)
+    };
+  }
+
+  function viewerArrowLineEnd(geometry) {
+    const vector = viewerArrowVector(geometry);
+    const size = viewerArrowHeadSize(geometry);
+
+    return {
+      x: geometry.x2 - vector.x * size.length * 0.72,
+      y: geometry.y2 - vector.y * size.length * 0.72
+    };
+  }
+
+  function viewerArrowHeadPoints(geometry) {
+    const vector = viewerArrowVector(geometry);
+    const size = viewerArrowHeadSize(geometry);
+    const baseX = geometry.x2 - vector.x * size.length;
+    const baseY = geometry.y2 - vector.y * size.length;
+    const perpendicularX = -vector.y;
+    const perpendicularY = vector.x;
+
+    return [
+      geometry.x2.toFixed(3) + "," + geometry.y2.toFixed(3),
+      (baseX + perpendicularX * size.half).toFixed(3) + "," + (baseY + perpendicularY * size.half).toFixed(3),
+      (baseX - perpendicularX * size.half).toFixed(3) + "," + (baseY - perpendicularY * size.half).toFixed(3)
+    ].join(" ");
   }
 
   function viewerScript() {
