@@ -117,6 +117,63 @@
     ns.render.updateDirtyIndicator();
   }
 
+  function insertBlockLink(blockId) {
+    const found = state.findBlockById(blockId);
+    if (!found) return;
+
+    const input = findBlockTextInput(blockId);
+    const currentText = input ? input.value : found.block.text || "";
+    const selectionStart = input && typeof input.selectionStart === "number" ? input.selectionStart : currentText.length;
+    const selectionEnd = input && typeof input.selectionEnd === "number" ? input.selectionEnd : selectionStart;
+
+    const rawUrl = prompt("リンクURLを入力してください。");
+    if (rawUrl == null) return;
+    const url = utils.normalizeLinkUrl(rawUrl);
+    if (!url) {
+      utils.toast("http(s) または mailto のリンクURLを入力してください。");
+      return;
+    }
+
+    const selectedText = currentText.slice(selectionStart, selectionEnd).trim();
+    const rawLabel = prompt("表示文言を入力してください。", selectedText || "");
+    if (rawLabel == null) return;
+    const label = rawLabel.trim();
+    if (!label) {
+      utils.toast("表示文言を入力してください。");
+      return;
+    }
+
+    const token = "[" + label.replace(/\]/g, ")").replace(/\n/g, " ") + "](" + url + ")";
+    const before = currentText.slice(0, selectionStart);
+    const after = currentText.slice(selectionEnd);
+    const prefix = before && !/\s$/.test(before) ? " " : "";
+    const suffix = after && !/^\s/.test(after) ? " " : "";
+    const nextText = before + prefix + token + suffix + after;
+    const caret = (before + prefix + token).length;
+
+    found.block.text = nextText;
+    state.store.currentStepId = found.step.id;
+    state.store.currentBlockId = found.block.id;
+    state.store.selectedAnnotationId = null;
+    state.markDirty();
+    ns.render.renderEditor();
+    ns.render.renderPreview();
+    ns.render.renderMarkdown();
+    ns.render.updateDirtyIndicator();
+
+    const nextInput = findBlockTextInput(blockId);
+    if (nextInput) {
+      nextInput.focus();
+      nextInput.setSelectionRange(caret, caret);
+    }
+  }
+
+  function findBlockTextInput(blockId) {
+    return utils.$$('textarea[data-block-field="text"]').find(function (node) {
+      return node.dataset.blockId === blockId;
+    }) || null;
+  }
+
   async function setBlockImageFromFile(blockId, file) {
     const found = state.findBlockById(blockId);
     if (!found || !file) return;
@@ -229,6 +286,7 @@
     deleteBlock,
     moveBlock,
     updateBlockField,
+    insertBlockLink,
     setBlockImageFromFile,
     clearBlockImage,
     moveBlockToStep,

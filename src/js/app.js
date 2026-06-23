@@ -80,6 +80,9 @@
         case "clear-block-image":
           ns.blocks.clearBlockImage(actionNode.dataset.blockId);
           return;
+        case "insert-block-link":
+          ns.blocks.insertBlockLink(actionNode.dataset.blockId);
+          return;
         case "add-annotation":
           ns.annotations.addAnnotation(actionNode.dataset.type, actionNode.dataset.blockId);
           return;

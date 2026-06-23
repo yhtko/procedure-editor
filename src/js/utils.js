@@ -1,7 +1,8 @@
 (function (ns) {
   "use strict";
 
-  const URL_PATTERN = /(https?:\/\/[^\s<>"']+)/g;
+  const URL_PATTERN = /(https?:\/\/[^\s<>"')]+)/g;
+  const MARKDOWN_LINK_PATTERN = /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+)\)/gi;
 
   function $(id) {
     return document.getElementById(id);
@@ -28,13 +29,46 @@
   }
 
   function textToHtml(value) {
-    const escaped = escapeHtml(value);
-    return escaped
-      .replace(URL_PATTERN, function (url) {
-        const href = url.replace(/&amp;/g, "&");
-        return '<a href="' + escapeAttribute(href) + '" target="_blank" rel="noopener noreferrer">' + url + "</a>";
-      })
-      .replace(/\n/g, "<br>");
+    const text = String(value == null ? "" : value);
+    let html = "";
+    let lastIndex = 0;
+    let match;
+
+    MARKDOWN_LINK_PATTERN.lastIndex = 0;
+    while ((match = MARKDOWN_LINK_PATTERN.exec(text)) !== null) {
+      html += autoLinkHtml(text.slice(lastIndex, match.index));
+      html += linkToHtml(match[1], match[2]);
+      lastIndex = match.index + match[0].length;
+    }
+
+    html += autoLinkHtml(text.slice(lastIndex));
+    return html.replace(/\n/g, "<br>");
+  }
+
+  function autoLinkHtml(value) {
+    return escapeHtml(value).replace(URL_PATTERN, function (url) {
+      const href = url.replace(/&amp;/g, "&");
+      return '<a href="' + escapeAttribute(href) + '" target="_blank" rel="noopener noreferrer">' + url + "</a>";
+    });
+  }
+
+  function linkToHtml(label, url) {
+    const href = safeLinkUrl(url);
+    if (!href) return escapeHtml(label);
+    return '<a href="' + escapeAttribute(href) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(label) + "</a>";
+  }
+
+  function normalizeLinkUrl(value) {
+    const url = String(value || "").trim();
+    if (!url) return "";
+    if (/^[a-z][a-z0-9+.-]*:/i.test(url)) return safeLinkUrl(url);
+    return safeLinkUrl("https://" + url);
+  }
+
+  function safeLinkUrl(value) {
+    const url = String(value || "").trim();
+    if (/^https?:\/\//i.test(url) || /^mailto:/i.test(url)) return url;
+    return "";
   }
 
   function todayIso() {
@@ -143,6 +177,7 @@
     escapeHtml,
     escapeAttribute,
     textToHtml,
+    normalizeLinkUrl,
     todayIso,
     timestamp,
     uid,

@@ -243,6 +243,18 @@ textarea {
   font-weight: 800;
 }
 
+.field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.field-label-row span {
+  margin-bottom: 0;
+}
+
 .field.wide {
   margin-top: 2px;
 }
@@ -295,8 +307,14 @@ textarea {
 }
 
 .step-line,
-.block-head,
 .sort-line {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.block-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -307,6 +325,7 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
   min-width: 54px;
   border-radius: 999px;
   padding: 2px 8px;
@@ -314,10 +333,12 @@ textarea {
   color: #1e40af;
   font-size: 12px;
   font-weight: 900;
+  white-space: nowrap;
 }
 
 .step-title,
 .sort-title {
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
