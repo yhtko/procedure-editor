@@ -35,7 +35,7 @@
         '<h3>STEP ' + (stepIndex + 1) + " " + utils.escapeHtml(step.title || "") + "</h3>",
         step.screen ? '<p><strong>画面名:</strong> ' + utils.escapeHtml(step.screen) + "</p>" : "",
         step.summary ? '<p>' + utils.textToHtml(step.summary) + "</p>" : "",
-        step.check ? '<p><strong>注意・確認ポイント</strong><br>' + utils.textToHtml(step.check) + "</p>" : "",
+        step.check ? '<aside class="viewer-callout viewer-callout-warning"><h4>注意・確認ポイント</h4><p>' + utils.textToHtml(step.check) + "</p></aside>" : "",
         blocks,
         "</section>"
       ].join("");
@@ -47,7 +47,8 @@
 
     const coverSections = ns.exporter.coverSections(cover).map(function (section) {
       if (!section[1]) return "";
-      return '<section class="cover-section"><h2>' + utils.escapeHtml(section[0]) + '</h2><p>' + utils.textToHtml(section[1]) + "</p></section>";
+      const classes = "cover-section" + (section[0] === "注意事項" ? " viewer-callout viewer-callout-warning" : "");
+      return '<section class="' + classes + '"><h2>' + utils.escapeHtml(section[0]) + '</h2><p>' + utils.textToHtml(section[1]) + "</p></section>";
     }).join("");
 
     const css = viewerCss();
@@ -130,6 +131,7 @@
       ".toc{position:sticky;top:86px;border:1px solid #d7dee8;border-radius:8px;background:#fff;padding:14px}.toc h2{font-size:16px;margin:0 0 8px}.toc ol{margin:0;padding-left:22px}.toc li{margin:6px 0}",
       ".content{border:1px solid #d7dee8;border-radius:8px;background:#fff;padding:28px;box-shadow:0 10px 24px rgba(15,23,42,.08)}",
       ".cover table{width:100%;border-collapse:collapse}.cover th,.cover td{border:1px solid #cbd5e1;padding:9px;text-align:left;vertical-align:top}.cover th{width:28%;background:#f1f5f9}",
+      ".viewer-callout{margin:18px 0;padding:13px 15px;border:1px solid #f6d88a;border-left:5px solid #d97706;border-radius:8px;background:#fffbeb}.viewer-callout h2,.viewer-callout h4{margin:0 0 7px;color:#7c2d12;font-size:16px}.viewer-callout p{margin:0}",
       ".viewer-step{margin-top:30px;padding-top:16px;border-top:3px solid #1e293b}.viewer-block{margin:18px 0 24px}.viewer-block h4{margin:0 0 8px}",
       ".viewer-image-frame{display:inline-block;max-width:100%;margin:10px 0 0;cursor:zoom-in}.viewer-image-frame figcaption{margin-top:4px;color:#667085;font-size:12px}.annotated-image{position:relative;display:inline-block;line-height:0;max-width:100%}.annotated-image img{display:block;max-width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff}",
       ".annotation{position:absolute;min-width:14px;min-height:14px;color:#ef4444;line-height:1}.annotation-circle{border:3px solid currentColor;border-radius:999px;background:rgba(255,255,255,.02)}.annotation-marker{border:2px solid rgba(180,83,9,.75);background:rgba(250,204,21,.38)}.annotation-number{display:flex;align-items:center;justify-content:center;border:3px solid #fff;border-radius:999px;background:currentColor;box-shadow:0 1px 6px rgba(15,23,42,.3)}.annotation-number span{color:#fff;font-weight:900;font-size:clamp(12px,2.6vw,28px);line-height:1}.annotation-arrow svg{display:block;width:100%;height:100%;overflow:visible}",

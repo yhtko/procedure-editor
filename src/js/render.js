@@ -179,7 +179,8 @@
     html += '<table class="cover-table">' + rows + '</table>';
     ns.exporter.coverSections(cover).forEach(function (section) {
       if (!section[1]) return;
-      html += '<h2>' + utils.escapeHtml(section[0]) + '</h2><p>' + utils.textToHtml(section[1]) + '</p>';
+      const highlight = section[0] === "注意事項" ? ' class="preview-callout preview-callout-warning"' : "";
+      html += '<section' + highlight + '><h2>' + utils.escapeHtml(section[0]) + '</h2><p>' + utils.textToHtml(section[1]) + '</p></section>';
     });
     html += '<div style="page-break-before:always"></div><h2>操作手順</h2>';
     if (!state.store.project.steps.length) {
@@ -190,7 +191,7 @@
       html += '<h3>STEP ' + (stepIndex + 1) + ' ' + utils.escapeHtml(step.title || "") + '</h3>';
       if (step.screen) html += '<p><strong>画面名:</strong> ' + utils.escapeHtml(step.screen) + '</p>';
       if (step.summary) html += '<p>' + utils.textToHtml(step.summary) + '</p>';
-      if (step.check) html += '<p><strong>注意・確認ポイント</strong><br>' + utils.textToHtml(step.check) + '</p>';
+      if (step.check) html += '<aside class="preview-callout preview-callout-warning"><h4>注意・確認ポイント</h4><p>' + utils.textToHtml(step.check) + '</p></aside>';
       (step.blocks || []).forEach(function (block, blockIndex) {
         html += '<div class="preview-block">';
         html += '<h4>' + (stepIndex + 1) + '.' + (blockIndex + 1) + ' ' + utils.escapeHtml(block.title || "") + '</h4>';
