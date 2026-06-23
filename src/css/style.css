@@ -677,7 +677,10 @@ body.annotation-modal-open {
 }
 
 .annotation-circle {
+  min-width: 0;
+  min-height: 0;
   aspect-ratio: 1 / 1;
+  height: auto;
   border: 3px solid currentColor;
   border-radius: 50%;
   background: transparent;
@@ -690,17 +693,23 @@ body.annotation-modal-open {
 }
 
 .annotation-number {
+  min-width: 0;
+  min-height: 0;
   aspect-ratio: 1 / 1;
+  height: auto;
+  border: 2px solid #fff;
   border-radius: 50%;
   background: currentColor;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 1px 7px rgba(15, 23, 42, 0.32);
 }
 
 .annotation-number span {
   color: #fff;
   font-weight: 700;
+  font-size: clamp(12px, 2.6vw, 30px);
   line-height: 1;
 }
 
@@ -734,6 +743,7 @@ body.annotation-modal-open {
 .annotation-arrow line {
   stroke-width: 2.2;
   stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
 }
 
 .arrow-point {

@@ -28,7 +28,7 @@
     state.store.currentStepId = found.step.id;
     state.store.currentBlockId = found.block.id;
 
-    if (type === "circle" || type === "arrow" || type === "marker") {
+    if (type === "circle" || type === "number" || type === "arrow" || type === "marker") {
       placementState = {
         type: type,
         blockId: found.block.id,
@@ -38,8 +38,10 @@
 
       if (type === "circle") {
         utils.toast("画像上をクリックして○を配置してください。");
+      } else if (type === "number") {
+        utils.toast("画像上をクリックして番号を配置してください。");
       } else if (type === "arrow") {
-        utils.toast("矢印の始点をクリックしてください。");
+        utils.toast("矢印の始点から終点までドラッグしてください。");
       } else {
         utils.toast("マーカーの開始位置から横にドラッグしてください。");
       }
@@ -276,12 +278,19 @@
     let width = utils.clamp(annotation.w, 4, maxW);
     let height = utils.clamp(annotation.h, 4, maxH);
 
-    if (annotation.type === "circle" || annotation.type === "number") {
-      const size = Math.min(width, height);
+    if (isRoundAnnotation(annotation)) {
+      const size = utils.clamp(width, 4, maxW);
       width = size;
       height = size;
       annotation.w = size;
       annotation.h = size;
+
+      return [
+        "left:" + x.toFixed(3) + "%;",
+        "top:" + y.toFixed(3) + "%;",
+        "width:" + width.toFixed(3) + "%;",
+        "color:" + utils.escapeAttribute(annotation.color || "#ef4444") + ";"
+      ].join("");
     }
 
     return [
@@ -300,6 +309,10 @@
       const placementBlockId = canvasForPlacement.dataset.blockId;
 
       if (placementBlockId === placementState.blockId) {
+        if (placementState.type === "arrow") {
+          return handleArrowPlacementStart(event, canvasForPlacement, placementBlockId);
+        }
+
         if (placementState.type === "marker") {
           return handleMarkerPlacementStart(event, canvasForPlacement, placementBlockId);
         }
@@ -396,6 +409,20 @@
       return true;
     }
 
+    if (dragState.mode === "arrow-create") {
+      const point = getRectPercent(event, dragState.rect);
+      const arrow = dragState.annotation;
+
+      arrow.x2 = point.x;
+      arrow.y2 = point.y;
+
+      state.markDirty();
+      if (dragState.element) updateArrowElement(dragState.element, arrow);
+      ns.render.updateDirtyIndicator();
+
+      return true;
+    }
+
     const dx = ((event.clientX - dragState.startX) / dragState.rect.width) * 100;
     const dy = ((event.clientY - dragState.startY) / dragState.rect.height) * 100;
     const annotation = dragState.annotation;
@@ -404,17 +431,17 @@
       updateArrowDrag(annotation, dx, dy);
       updateArrowElement(dragState.element, annotation);
     } else if (dragState.mode === "resize") {
-      if (annotation.type === "circle" || annotation.type === "number") {
+      if (isRoundAnnotation(annotation)) {
         const delta = Math.max(dx, dy);
-        const maxSize = Math.min(
-          100 - dragState.original.x,
-          100 - dragState.original.y
-        );
+        const maxSize = maxRoundSizePercent(dragState.original.x, dragState.original.y, dragState.rect);
 
         const size = utils.clamp(dragState.original.w + delta, 4, maxSize);
 
         annotation.w = size;
         annotation.h = size;
+      } else if (annotation.type === "marker") {
+        annotation.w = utils.clamp(dragState.original.w + dx, 1, 100 - dragState.original.x);
+        annotation.h = dragState.original.h || 4;
       } else {
         annotation.w = utils.clamp(dragState.original.w + dx, 4, 100 - dragState.original.x);
         annotation.h = utils.clamp(dragState.original.h + dy, 4, 100 - dragState.original.y);
@@ -422,8 +449,17 @@
 
       dragState.element.setAttribute("style", positionStyle(annotation));
     } else {
-      annotation.x = utils.clamp(dragState.original.x + dx, 0, 100 - dragState.original.w);
-      annotation.y = utils.clamp(dragState.original.y + dy, 0, 100 - dragState.original.h);
+      if (isRoundAnnotation(annotation)) {
+        annotation.x = utils.clamp(dragState.original.x + dx, 0, 100 - annotation.w);
+        annotation.y = utils.clamp(
+          dragState.original.y + dy,
+          0,
+          100 - roundHeightPercent(annotation, dragState.rect)
+        );
+      } else {
+        annotation.x = utils.clamp(dragState.original.x + dx, 0, 100 - dragState.original.w);
+        annotation.y = utils.clamp(dragState.original.y + dy, 0, 100 - dragState.original.h);
+      }
 
       dragState.element.setAttribute("style", positionStyle(annotation));
     }
@@ -445,6 +481,33 @@
           dragState.element.releasePointerCapture(event.pointerId);
         } catch (error) {
           // Pointer capture can already be released by the browser.
+        }
+      }
+
+      dragState = null;
+      refreshAnnotationViews();
+      return true;
+    }
+
+    if (dragState.mode === "arrow-create") {
+      if (dragState.element) {
+        try {
+          dragState.element.releasePointerCapture(event.pointerId);
+        } catch (error) {
+          // Pointer capture can already be released by the browser.
+        }
+      }
+
+      const arrow = dragState.annotation;
+      const tooShort = Math.abs(arrow.x2 - arrow.x1) < 0.6 && Math.abs(arrow.y2 - arrow.y1) < 0.6;
+
+      if (tooShort) {
+        const found = state.findBlockById(dragState.blockId);
+        if (found) {
+          found.block.annotations = found.block.annotations.filter(function (annotation) {
+            return annotation.id !== arrow.id;
+          });
+          state.store.selectedAnnotationId = null;
         }
       }
 
@@ -476,12 +539,14 @@
 
     const point = getCanvasPercent(event, canvas);
 
-    if (placementState.type === "circle") {
-      const size = 12;
-      const annotation = state.createAnnotation("circle", nextNumberLabel(found.block));
+    if (placementState.type === "circle" || placementState.type === "number") {
+      const size = placementState.type === "number" ? 6 : 10;
+      const annotation = state.createAnnotation(placementState.type, nextNumberLabel(found.block));
+      const rect = canvas.getBoundingClientRect();
+      const heightPercent = size * (rect.width / rect.height);
 
       annotation.x = utils.clamp(point.x - size / 2, 0, 100 - size);
-      annotation.y = utils.clamp(point.y - size / 2, 0, 100 - size);
+      annotation.y = utils.clamp(point.y - heightPercent / 2, 0, 100 - heightPercent);
       annotation.w = size;
       annotation.h = size;
 
@@ -495,36 +560,57 @@
       return true;
     }
 
-    if (placementState.type === "arrow") {
-      if (!placementState.arrowStart) {
-        placementState.arrowStart = point;
-        utils.toast("矢印の終点をクリックしてください。");
-        return true;
+    return false;
+  }
+
+  function handleArrowPlacementStart(event, canvas, blockId) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const found = state.findBlockById(blockId);
+    if (!found) return false;
+
+    const point = getCanvasPercent(event, canvas);
+    const annotation = state.createAnnotation("arrow", nextNumberLabel(found.block));
+
+    annotation.x1 = point.x;
+    annotation.y1 = point.y;
+    annotation.x2 = point.x;
+    annotation.y2 = point.y;
+
+    found.block.annotations.push(annotation);
+    state.store.selectedAnnotationId = annotation.id;
+
+    dragState = {
+      mode: "arrow-create",
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      rect: canvas.getBoundingClientRect(),
+      canvas: canvas,
+      annotation: annotation,
+      element: null,
+      blockId: blockId,
+      original: {
+        x1: annotation.x1,
+        y1: annotation.y1,
+        x2: annotation.x2,
+        y2: annotation.y2
       }
+    };
 
-      const annotation = state.createAnnotation("arrow", nextNumberLabel(found.block));
+    placementState = null;
+    state.markDirty();
+    refreshAnnotationViews();
+    dragState.element = document.querySelector('[data-annotation-id="' + utils.escapeAttribute(annotation.id) + '"]');
 
-      annotation.x1 = placementState.arrowStart.x;
-      annotation.y1 = placementState.arrowStart.y;
-      annotation.x2 = point.x;
-      annotation.y2 = point.y;
-
-      annotation.x = 0;
-      annotation.y = 0;
-      annotation.w = 100;
-      annotation.h = 100;
-
-      found.block.annotations.push(annotation);
-      state.store.selectedAnnotationId = annotation.id;
-
-      placementState = null;
-      state.markDirty();
-      refreshAnnotationViews();
-
-      return true;
+    try {
+      (dragState.element || canvas).setPointerCapture(event.pointerId);
+    } catch (error) {
+      // Document-level pointer handlers still keep the drag usable.
     }
 
-    return false;
+    return true;
   }
 
   function handleMarkerPlacementStart(event, canvas, blockId) {
@@ -578,7 +664,10 @@
 
   function getCanvasPercent(event, canvas) {
     const rect = canvas.getBoundingClientRect();
+    return getRectPercent(event, rect);
+  }
 
+  function getRectPercent(event, rect) {
     return {
       x: utils.clamp(((event.clientX - rect.left) / rect.width) * 100, 0, 100),
       y: utils.clamp(((event.clientY - rect.top) / rect.height) * 100, 0, 100)
@@ -701,7 +790,7 @@
   function normalizeAnnotation(annotation) {
     if (!annotation) return;
 
-    if (annotation.type === "circle" || annotation.type === "number") {
+    if (isRoundAnnotation(annotation)) {
       const size = Math.min(
         Number(annotation.w) || 10,
         Number(annotation.h) || 10
@@ -726,6 +815,23 @@
 
   function safePercent(value) {
     return utils.clamp(Number(value) || 0, 0, 100).toFixed(3);
+  }
+
+  function isRoundAnnotation(annotation) {
+    return annotation && (annotation.type === "circle" || annotation.type === "number");
+  }
+
+  function roundHeightPercent(annotation, rect) {
+    const size = Number(annotation.w) || 0;
+    if (!rect || !rect.height) return size;
+    return size * (rect.width / rect.height);
+  }
+
+  function maxRoundSizePercent(x, y, rect) {
+    const maxW = Math.max(4, 100 - x);
+    if (!rect || !rect.width) return maxW;
+    const maxByHeight = Math.max(4, ((100 - y) / 100) * rect.height / rect.width * 100);
+    return Math.min(maxW, maxByHeight);
   }
 
   function arrowGeometry(annotation) {
