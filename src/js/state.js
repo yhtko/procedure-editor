@@ -152,16 +152,28 @@
   function normalizeAnnotation(annotation, index) {
     if (!annotation || typeof annotation !== "object") return null;
     const type = ANNOTATION_TYPES.includes(annotation.type) ? annotation.type : "circle";
-    return {
+    const width = utils.clamp(annotation.w, 4, 100);
+    const height = utils.clamp(annotation.h, 4, 100);
+    const size = type === "circle" || type === "number" ? Math.min(width, height) : null;
+    const normalized = {
       id: annotation.id || utils.uid("ann"),
       type,
       x: utils.clamp(annotation.x, 0, 98),
       y: utils.clamp(annotation.y, 0, 98),
-      w: utils.clamp(annotation.w, 4, 100),
-      h: utils.clamp(annotation.h, 4, 100),
+      w: size || width,
+      h: size || height,
       label: annotation.label != null ? String(annotation.label) : type === "number" ? String(index + 1) : "",
       color: annotation.color || (type === "marker" ? "#facc15" : "#ef4444")
     };
+
+    if (type === "arrow") {
+      if (typeof annotation.x1 === "number") normalized.x1 = utils.clamp(annotation.x1, 0, 100);
+      if (typeof annotation.y1 === "number") normalized.y1 = utils.clamp(annotation.y1, 0, 100);
+      if (typeof annotation.x2 === "number") normalized.x2 = utils.clamp(annotation.x2, 0, 100);
+      if (typeof annotation.y2 === "number") normalized.y2 = utils.clamp(annotation.y2, 0, 100);
+    }
+
+    return normalized;
   }
 
   function setProject(project) {

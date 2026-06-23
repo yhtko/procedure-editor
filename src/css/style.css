@@ -677,20 +677,22 @@ body.annotation-modal-open {
 }
 
 .annotation-circle {
-  border: 4px solid currentColor;
+  aspect-ratio: 1 / 1;
+  border: 3px solid currentColor;
   border-radius: 50%;
   background: transparent;
 }
 
 .annotation-marker {
-  border: 4px solid currentColor;
-  background: rgba(239, 68, 68, 0.18);
+  border: 3px solid #2563eb;
+  background: rgba(37, 99, 235, 0.14);
+  border-radius: 0;
 }
 
 .annotation-number {
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   background: currentColor;
-  color: #ef4444;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -704,10 +706,10 @@ body.annotation-modal-open {
 
 .resize-handle {
   position: absolute;
-  right: -8px;
-  bottom: -8px;
-  width: 16px;
-  height: 16px;
+  right: -7px;
+  bottom: -7px;
+  width: 14px;
+  height: 14px;
   border: 2px solid currentColor;
   background: #fff;
   border-radius: 50%;
@@ -719,6 +721,7 @@ body.annotation-modal-open {
   position: absolute;
   pointer-events: auto;
   cursor: move;
+  overflow: visible;
 }
 
 .annotation-arrow svg {
@@ -728,10 +731,15 @@ body.annotation-modal-open {
   pointer-events: none;
 }
 
+.annotation-arrow line {
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
 .arrow-point {
   position: absolute;
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
   border: 2px solid currentColor;
   background: #fff;
   border-radius: 50%;

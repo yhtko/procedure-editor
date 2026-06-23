@@ -28,17 +28,20 @@
     state.store.currentStepId = found.step.id;
     state.store.currentBlockId = found.block.id;
 
-    if (type === "circle" || type === "arrow") {
+    if (type === "circle" || type === "arrow" || type === "marker") {
       placementState = {
         type: type,
         blockId: found.block.id,
-        arrowStart: null
+        arrowStart: null,
+        markerStart: null
       };
 
       if (type === "circle") {
         utils.toast("画像上をクリックして○を配置してください。");
-      } else {
+      } else if (type === "arrow") {
         utils.toast("矢印の始点をクリックしてください。");
+      } else {
+        utils.toast("マーカーの開始位置から横にドラッグしてください。");
       }
 
       return;
@@ -238,25 +241,26 @@
   }
 
   function arrowMarkup(annotation, className, data, mode, editable, selected) {
-    const markerId = "arrow_" + mode + "_" + annotation.id;
     const color = annotation.color || "#ef4444";
+    const markerId = "arrow_" + mode + "_" + annotation.id;
+    const geometry = arrowGeometry(annotation);
 
     const handles = editable && selected
       ? [
-          '<span class="arrow-point arrow-start" data-arrow-point="start" style="left:' + safePercent(annotation.x1) + '%;top:' + safePercent(annotation.y1) + '%;"></span>',
-          '<span class="arrow-point arrow-end" data-arrow-point="end" style="left:' + safePercent(annotation.x2) + '%;top:' + safePercent(annotation.y2) + '%;"></span>'
+          '<span class="arrow-point arrow-start" data-arrow-point="start" style="left:' + geometry.x1.toFixed(3) + '%;top:' + geometry.y1.toFixed(3) + '%;"></span>',
+          '<span class="arrow-point arrow-end" data-arrow-point="end" style="left:' + geometry.x2.toFixed(3) + '%;top:' + geometry.y2.toFixed(3) + '%;"></span>'
         ].join("")
       : "";
 
     return [
-      '<div class="' + className + '"' + data + ' style="left:0;top:0;width:100%;height:100%;color:' + utils.escapeAttribute(color) + ';" aria-label="矢印注釈">',
+      '<div class="' + className + '"' + data + ' style="left:' + geometry.left.toFixed(3) + '%;top:' + geometry.top.toFixed(3) + '%;width:' + geometry.width.toFixed(3) + '%;height:' + geometry.height.toFixed(3) + '%;color:' + utils.escapeAttribute(color) + ';" aria-label="矢印注釈">',
       '<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">',
       '<defs>',
-      '<marker id="' + utils.escapeAttribute(markerId) + '" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">',
-      '<path d="M0,0 L8,4 L0,8 Z" fill="' + utils.escapeAttribute(color) + '"></path>',
+      '<marker id="' + utils.escapeAttribute(markerId) + '" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">',
+      '<path d="M0,0 L6,3 L0,6 Z" fill="' + utils.escapeAttribute(color) + '"></path>',
       '</marker>',
       '</defs>',
-      '<line x1="' + safePercent(annotation.x1) + '" y1="' + safePercent(annotation.y1) + '" x2="' + safePercent(annotation.x2) + '" y2="' + safePercent(annotation.y2) + '" stroke="' + utils.escapeAttribute(color) + '" stroke-width="2.8" stroke-linecap="round" marker-end="url(#' + utils.escapeAttribute(markerId) + ')"></line>',
+      '<line x1="' + geometry.x1.toFixed(3) + '" y1="' + geometry.y1.toFixed(3) + '" x2="' + geometry.x2.toFixed(3) + '" y2="' + geometry.y2.toFixed(3) + '" stroke="' + utils.escapeAttribute(color) + '" marker-end="url(#' + utils.escapeAttribute(markerId) + ')"></line>',
       '</svg>',
       handles,
       '</div>'
@@ -272,7 +276,7 @@
     let width = utils.clamp(annotation.w, 4, maxW);
     let height = utils.clamp(annotation.h, 4, maxH);
 
-    if (annotation.type === "circle") {
+    if (annotation.type === "circle" || annotation.type === "number") {
       const size = Math.min(width, height);
       width = size;
       height = size;
@@ -296,6 +300,10 @@
       const placementBlockId = canvasForPlacement.dataset.blockId;
 
       if (placementBlockId === placementState.blockId) {
+        if (placementState.type === "marker") {
+          return handleMarkerPlacementStart(event, canvasForPlacement, placementBlockId);
+        }
+
         return handlePlacementClick(event, canvasForPlacement, placementBlockId);
       }
     }
@@ -366,6 +374,28 @@
 
     event.preventDefault();
 
+    if (dragState.mode === "marker-create") {
+      const markerDx = ((event.clientX - dragState.startX) / dragState.rect.width) * 100;
+      const marker = dragState.annotation;
+
+      if (markerDx >= 0) {
+        marker.x = dragState.original.x;
+        marker.w = utils.clamp(markerDx, 1, 100 - marker.x);
+      } else {
+        marker.x = utils.clamp(dragState.original.x + markerDx, 0, 100);
+        marker.w = utils.clamp(Math.abs(markerDx), 1, 100 - marker.x);
+      }
+
+      state.markDirty();
+      if (dragState.element) {
+        dragState.element.setAttribute("style", positionStyle(marker));
+      } else {
+        ns.render.updateDirtyIndicator();
+      }
+
+      return true;
+    }
+
     const dx = ((event.clientX - dragState.startX) / dragState.rect.width) * 100;
     const dy = ((event.clientY - dragState.startY) / dragState.rect.height) * 100;
     const annotation = dragState.annotation;
@@ -374,7 +404,7 @@
       updateArrowDrag(annotation, dx, dy);
       updateArrowElement(dragState.element, annotation);
     } else if (dragState.mode === "resize") {
-      if (annotation.type === "circle") {
+      if (annotation.type === "circle" || annotation.type === "number") {
         const delta = Math.max(dx, dy);
         const maxSize = Math.min(
           100 - dragState.original.x,
@@ -409,10 +439,26 @@
 
     event.preventDefault();
 
-    try {
-      dragState.element.releasePointerCapture(event.pointerId);
-    } catch (error) {
-      // Pointer capture can already be released by the browser.
+    if (dragState.mode === "marker-create") {
+      if (dragState.element) {
+        try {
+          dragState.element.releasePointerCapture(event.pointerId);
+        } catch (error) {
+          // Pointer capture can already be released by the browser.
+        }
+      }
+
+      dragState = null;
+      refreshAnnotationViews();
+      return true;
+    }
+
+    if (dragState.element) {
+      try {
+        dragState.element.releasePointerCapture(event.pointerId);
+      } catch (error) {
+        // Pointer capture can already be released by the browser.
+      }
     }
 
     dragState = null;
@@ -481,6 +527,55 @@
     return false;
   }
 
+  function handleMarkerPlacementStart(event, canvas, blockId) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const found = state.findBlockById(blockId);
+    if (!found) return false;
+
+    const point = getCanvasPercent(event, canvas);
+    const annotation = state.createAnnotation("marker", nextNumberLabel(found.block));
+
+    annotation.x = point.x;
+    annotation.y = utils.clamp(point.y - 2, 0, 96);
+    annotation.w = 1;
+    annotation.h = 4;
+
+    found.block.annotations.push(annotation);
+    state.store.selectedAnnotationId = annotation.id;
+
+    dragState = {
+      mode: "marker-create",
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      rect: canvas.getBoundingClientRect(),
+      annotation: annotation,
+      element: null,
+      blockId: blockId,
+      original: {
+        x: annotation.x,
+        y: annotation.y,
+        w: annotation.w,
+        h: annotation.h
+      }
+    };
+
+    placementState = null;
+    state.markDirty();
+    refreshAnnotationViews();
+    dragState.element = document.querySelector('[data-annotation-id="' + utils.escapeAttribute(annotation.id) + '"]');
+
+    try {
+      (dragState.element || canvas).setPointerCapture(event.pointerId);
+    } catch (error) {
+      // Document-level pointer handlers still keep the drag usable.
+    }
+
+    return true;
+  }
+
   function getCanvasPercent(event, canvas) {
     const rect = canvas.getBoundingClientRect();
 
@@ -528,26 +623,32 @@
   }
 
   function updateArrowElement(element, annotation) {
+    const geometry = arrowGeometry(annotation);
     const line = element.querySelector("line");
 
+    element.style.left = geometry.left.toFixed(3) + "%";
+    element.style.top = geometry.top.toFixed(3) + "%";
+    element.style.width = geometry.width.toFixed(3) + "%";
+    element.style.height = geometry.height.toFixed(3) + "%";
+
     if (line) {
-      line.setAttribute("x1", safePercent(annotation.x1));
-      line.setAttribute("y1", safePercent(annotation.y1));
-      line.setAttribute("x2", safePercent(annotation.x2));
-      line.setAttribute("y2", safePercent(annotation.y2));
+      line.setAttribute("x1", geometry.x1.toFixed(3));
+      line.setAttribute("y1", geometry.y1.toFixed(3));
+      line.setAttribute("x2", geometry.x2.toFixed(3));
+      line.setAttribute("y2", geometry.y2.toFixed(3));
     }
 
     const start = element.querySelector(".arrow-start");
     const end = element.querySelector(".arrow-end");
 
     if (start) {
-      start.style.left = safePercent(annotation.x1) + "%";
-      start.style.top = safePercent(annotation.y1) + "%";
+      start.style.left = geometry.x1.toFixed(3) + "%";
+      start.style.top = geometry.y1.toFixed(3) + "%";
     }
 
     if (end) {
-      end.style.left = safePercent(annotation.x2) + "%";
-      end.style.top = safePercent(annotation.y2) + "%";
+      end.style.left = geometry.x2.toFixed(3) + "%";
+      end.style.top = geometry.y2.toFixed(3) + "%";
     }
   }
 
@@ -573,17 +674,18 @@
       normalizeAnnotation(annotation);
 
       if (annotation.type === "arrow") {
+        const geometry = arrowGeometry(annotation);
         const start = document.createElement("span");
         start.className = "arrow-point arrow-start";
         start.dataset.arrowPoint = "start";
-        start.style.left = safePercent(annotation.x1) + "%";
-        start.style.top = safePercent(annotation.y1) + "%";
+        start.style.left = geometry.x1.toFixed(3) + "%";
+        start.style.top = geometry.y1.toFixed(3) + "%";
 
         const end = document.createElement("span");
         end.className = "arrow-point arrow-end";
         end.dataset.arrowPoint = "end";
-        end.style.left = safePercent(annotation.x2) + "%";
-        end.style.top = safePercent(annotation.y2) + "%";
+        end.style.left = geometry.x2.toFixed(3) + "%";
+        end.style.top = geometry.y2.toFixed(3) + "%";
 
         node.appendChild(start);
         node.appendChild(end);
@@ -599,10 +701,10 @@
   function normalizeAnnotation(annotation) {
     if (!annotation) return;
 
-    if (annotation.type === "circle") {
+    if (annotation.type === "circle" || annotation.type === "number") {
       const size = Math.min(
-        Number(annotation.w) || 12,
-        Number(annotation.h) || 12
+        Number(annotation.w) || 10,
+        Number(annotation.h) || 10
       );
 
       annotation.w = utils.clamp(size, 4, 100);
@@ -610,40 +712,43 @@
     }
 
     if (annotation.type === "arrow") {
-      if (typeof annotation.x1 !== "number") {
-        annotation.x1 = typeof annotation.x === "number" ? annotation.x + 8 : 20;
-      }
-
-      if (typeof annotation.y1 !== "number") {
-        annotation.y1 = typeof annotation.y === "number" ? annotation.y + 88 : 70;
-      }
-
-      if (typeof annotation.x2 !== "number") {
-        annotation.x2 = typeof annotation.x === "number" && typeof annotation.w === "number"
-          ? annotation.x + annotation.w - 8
-          : 70;
-      }
-
-      if (typeof annotation.y2 !== "number") {
-        annotation.y2 = typeof annotation.y === "number" && typeof annotation.h === "number"
-          ? annotation.y + 12
-          : 30;
-      }
+      if (typeof annotation.x1 !== "number") annotation.x1 = 20;
+      if (typeof annotation.y1 !== "number") annotation.y1 = 50;
+      if (typeof annotation.x2 !== "number") annotation.x2 = 45;
+      if (typeof annotation.y2 !== "number") annotation.y2 = 50;
 
       annotation.x1 = utils.clamp(annotation.x1, 0, 100);
       annotation.y1 = utils.clamp(annotation.y1, 0, 100);
       annotation.x2 = utils.clamp(annotation.x2, 0, 100);
       annotation.y2 = utils.clamp(annotation.y2, 0, 100);
-
-      annotation.x = 0;
-      annotation.y = 0;
-      annotation.w = 100;
-      annotation.h = 100;
     }
   }
 
   function safePercent(value) {
     return utils.clamp(Number(value) || 0, 0, 100).toFixed(3);
+  }
+
+  function arrowGeometry(annotation) {
+    const minX = Math.min(annotation.x1, annotation.x2);
+    const minY = Math.min(annotation.y1, annotation.y2);
+    const maxX = Math.max(annotation.x1, annotation.x2);
+    const maxY = Math.max(annotation.y1, annotation.y2);
+    const pad = 2;
+    const left = utils.clamp(minX - pad, 0, 100);
+    const top = utils.clamp(minY - pad, 0, 100);
+    const width = utils.clamp((maxX - minX) + pad * 2, 3, 100 - left);
+    const height = utils.clamp((maxY - minY) + pad * 2, 3, 100 - top);
+
+    return {
+      left: left,
+      top: top,
+      width: width,
+      height: height,
+      x1: ((annotation.x1 - left) / width) * 100,
+      y1: ((annotation.y1 - top) / height) * 100,
+      x2: ((annotation.x2 - left) / width) * 100,
+      y2: ((annotation.y2 - top) / height) * 100
+    };
   }
 
   ns.annotations = {
