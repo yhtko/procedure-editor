@@ -306,8 +306,9 @@
 
   function arrowMarkup(annotation, className, data, mode, editable, selected) {
     const color = annotation.color || "#ef4444";
-    const markerId = "arrow_" + mode + "_" + annotation.id;
     const geometry = arrowGeometry(annotation);
+    const angle = arrowAngle(geometry);
+    const head = '<span class="arrow-head" style="left:' + geometry.x2.toFixed(3) + '%;top:' + geometry.y2.toFixed(3) + '%;transform:translate(-78%, -50%) rotate(' + angle.toFixed(3) + 'deg);"></span>';
 
     const handles = editable && selected
       ? [
@@ -319,13 +320,9 @@
     return [
       '<div class="' + className + '"' + data + ' style="left:' + geometry.left.toFixed(3) + '%;top:' + geometry.top.toFixed(3) + '%;width:' + geometry.width.toFixed(3) + '%;height:' + geometry.height.toFixed(3) + '%;color:' + utils.escapeAttribute(color) + ';" aria-label="矢印注釈">',
       '<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">',
-      '<defs>',
-      '<marker id="' + utils.escapeAttribute(markerId) + '" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">',
-      '<path d="M0,0 L8,4 L0,8 Z" fill="' + utils.escapeAttribute(color) + '"></path>',
-      '</marker>',
-      '</defs>',
-      '<line x1="' + geometry.x1.toFixed(3) + '" y1="' + geometry.y1.toFixed(3) + '" x2="' + geometry.x2.toFixed(3) + '" y2="' + geometry.y2.toFixed(3) + '" stroke="' + utils.escapeAttribute(color) + '" marker-end="url(#' + utils.escapeAttribute(markerId) + ')"></line>',
+      '<line x1="' + geometry.x1.toFixed(3) + '" y1="' + geometry.y1.toFixed(3) + '" x2="' + geometry.x2.toFixed(3) + '" y2="' + geometry.y2.toFixed(3) + '" stroke="' + utils.escapeAttribute(color) + '"></line>',
       '</svg>',
+      head,
       handles,
       '</div>'
     ].join("");
@@ -805,6 +802,13 @@
 
     const start = element.querySelector(".arrow-start");
     const end = element.querySelector(".arrow-end");
+    const head = element.querySelector(".arrow-head");
+
+    if (head) {
+      head.style.left = geometry.x2.toFixed(3) + "%";
+      head.style.top = geometry.y2.toFixed(3) + "%";
+      head.style.transform = "translate(-78%, -50%) rotate(" + arrowAngle(geometry).toFixed(3) + "deg)";
+    }
 
     if (start) {
       start.style.left = geometry.x1.toFixed(3) + "%";
@@ -930,6 +934,11 @@
     return true;
   }
 
+  function handleEscape() {
+    if (cancelPlacement()) return true;
+    return Boolean(modalBlockId);
+  }
+
   function normalizeAnnotationColor(color) {
     const value = String(color || "").toLowerCase();
     const found = ANNOTATION_COLORS.find(function (item) {
@@ -961,6 +970,10 @@
     };
   }
 
+  function arrowAngle(geometry) {
+    return Math.atan2(geometry.y2 - geometry.y1, geometry.x2 - geometry.x1) * 180 / Math.PI;
+  }
+
   ns.annotations = {
     addAnnotation: addAnnotation,
     deleteSelectedAnnotation: deleteSelectedAnnotation,
@@ -968,6 +981,7 @@
     closeAnnotationModal: closeAnnotationModal,
     setAnnotationColor: setAnnotationColor,
     cancelPlacement: cancelPlacement,
+    handleEscape: handleEscape,
     imageMarkup: imageMarkup,
     handlePointerDown: handlePointerDown,
     handlePointerMove: handlePointerMove,

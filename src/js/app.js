@@ -211,7 +211,7 @@
 
   function handleKeyDown(event) {
     if (event.key === "Escape") {
-      if (ns.annotations.cancelPlacement()) return;
+      if (ns.annotations.handleEscape()) return;
       ns.annotations.closeAnnotationModal();
     }
   }
