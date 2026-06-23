@@ -93,6 +93,9 @@
         case "add-annotation":
           ns.annotations.addAnnotation(actionNode.dataset.type, actionNode.dataset.blockId);
           return;
+        case "set-marker-color":
+          ns.annotations.setMarkerColor(actionNode.dataset.color, actionNode.dataset.blockId);
+          return;
         case "delete-annotation":
           state.store.currentBlockId = actionNode.dataset.blockId;
           ns.annotations.deleteSelectedAnnotation();
