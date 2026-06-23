@@ -24,6 +24,7 @@
     document.addEventListener("pointerdown", ns.annotations.handlePointerDown);
     document.addEventListener("pointermove", ns.annotations.handlePointerMove);
     document.addEventListener("pointerup", ns.annotations.handlePointerUp);
+    document.addEventListener("keydown", handleKeyDown);
     window.addEventListener("beforeunload", handleBeforeUnload);
   }
 
@@ -82,6 +83,12 @@
           return;
         case "insert-block-link":
           ns.blocks.insertBlockLink(actionNode.dataset.blockId);
+          return;
+        case "open-annotation-modal":
+          ns.annotations.openAnnotationModal(actionNode.dataset.blockId);
+          return;
+        case "close-annotation-modal":
+          ns.annotations.closeAnnotationModal();
           return;
         case "add-annotation":
           ns.annotations.addAnnotation(actionNode.dataset.type, actionNode.dataset.blockId);
@@ -197,6 +204,12 @@
     if (!file) return;
     event.preventDefault();
     await ns.blocks.pasteImage(file);
+  }
+
+  function handleKeyDown(event) {
+    if (event.key === "Escape") {
+      ns.annotations.closeAnnotationModal();
+    }
   }
 
   function handleBeforeUnload(event) {

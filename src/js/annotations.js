@@ -4,6 +4,7 @@
   const utils = ns.utils;
   const state = ns.state;
   let dragState = null;
+  let modalBlockId = null;
 
   function nextNumberLabel(block) {
     const numbers = (block.annotations || [])
@@ -25,9 +26,7 @@
     state.store.currentBlockId = found.block.id;
     state.store.selectedAnnotationId = annotation.id;
     state.markDirty();
-    ns.render.renderEditor();
-    ns.render.renderPreview();
-    ns.render.renderMarkdown();
+    refreshAnnotationViews();
   }
 
   function deleteSelectedAnnotation() {
@@ -43,9 +42,85 @@
     if (found.block.annotations.length === before) return;
     state.store.selectedAnnotationId = null;
     state.markDirty();
+    refreshAnnotationViews();
+  }
+
+  function openAnnotationModal(blockId) {
+    const found = state.findBlockById(blockId);
+    if (!found || !found.block.image) {
+      utils.toast("注釈を編集する画像がありません。");
+      return;
+    }
+    modalBlockId = found.block.id;
+    state.store.currentStepId = found.step.id;
+    state.store.currentBlockId = found.block.id;
+    ensureAnnotationModal();
+    renderAnnotationModal();
+    document.body.classList.add("annotation-modal-open");
+  }
+
+  function closeAnnotationModal() {
+    const modal = utils.$("annotationModal");
+    if (!modalBlockId && (!modal || !modal.classList.contains("open"))) return;
+    modalBlockId = null;
+    dragState = null;
+    if (modal) modal.classList.remove("open");
+    document.body.classList.remove("annotation-modal-open");
     ns.render.renderEditor();
+  }
+
+  function ensureAnnotationModal() {
+    if (utils.$("annotationModal")) return;
+    const modal = document.createElement("div");
+    modal.id = "annotationModal";
+    modal.className = "annotation-modal no-print";
+    modal.setAttribute("aria-hidden", "true");
+    document.body.appendChild(modal);
+  }
+
+  function renderAnnotationModal() {
+    const modal = utils.$("annotationModal");
+    const found = state.findBlockById(modalBlockId);
+    if (!modal || !found || !found.block.image) {
+      closeAnnotationModal();
+      return;
+    }
+    const block = found.block;
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    modal.innerHTML = [
+      '<div class="annotation-modal-backdrop" data-action="close-annotation-modal"></div>',
+      '<section class="annotation-modal-panel" role="dialog" aria-modal="true" aria-label="注釈編集">',
+      '<header class="annotation-modal-head">',
+      '<div>',
+      '<h2>注釈編集</h2>',
+      '<p>' + utils.escapeHtml(block.imageName || "スクリーンショット") + '</p>',
+      '</div>',
+      '<button type="button" class="secondary" data-action="close-annotation-modal">閉じる</button>',
+      '</header>',
+      '<div class="annotation-modal-toolbar">',
+      '<button type="button" class="secondary" data-action="add-annotation" data-type="circle" data-block-id="' + utils.escapeAttribute(block.id) + '">○</button>',
+      '<button type="button" class="secondary" data-action="add-annotation" data-type="arrow" data-block-id="' + utils.escapeAttribute(block.id) + '">矢印</button>',
+      '<button type="button" class="secondary" data-action="add-annotation" data-type="number" data-block-id="' + utils.escapeAttribute(block.id) + '">番号</button>',
+      '<button type="button" class="secondary" data-action="add-annotation" data-type="marker" data-block-id="' + utils.escapeAttribute(block.id) + '">マーカー</button>',
+      '<button type="button" class="danger" data-action="delete-annotation" data-block-id="' + utils.escapeAttribute(block.id) + '">選択注釈を削除</button>',
+      '</div>',
+      '<div class="annotation-modal-stage">',
+      imageMarkup(block, "editor"),
+      '</div>',
+      '</section>'
+    ].join("");
+  }
+
+  function refreshAnnotationViews() {
+    if (modalBlockId) {
+      renderAnnotationModal();
+    } else {
+      ns.render.renderEditor();
+    }
     ns.render.renderPreview();
     ns.render.renderMarkdown();
+    ns.render.updateDirtyIndicator();
   }
 
   function imageMarkup(block, mode) {
@@ -192,9 +267,7 @@
       // Pointer capture can already be released by the browser.
     }
     dragState = null;
-    ns.render.renderEditor();
-    ns.render.renderPreview();
-    ns.render.renderMarkdown();
+    refreshAnnotationViews();
     return true;
   }
 
@@ -215,6 +288,8 @@
   ns.annotations = {
     addAnnotation,
     deleteSelectedAnnotation,
+    openAnnotationModal,
+    closeAnnotationModal,
     imageMarkup,
     handlePointerDown,
     handlePointerMove,

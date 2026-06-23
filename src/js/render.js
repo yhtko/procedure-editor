@@ -129,11 +129,8 @@
     return [
       ns.annotations.imageMarkup(block, "editor"),
       '<div class="annotation-toolbar no-print">',
-      '<button type="button" class="small secondary" data-action="add-annotation" data-type="circle" data-block-id="' + utils.escapeAttribute(block.id) + '">○</button>',
-      '<button type="button" class="small secondary" data-action="add-annotation" data-type="arrow" data-block-id="' + utils.escapeAttribute(block.id) + '">矢印</button>',
-      '<button type="button" class="small secondary" data-action="add-annotation" data-type="number" data-block-id="' + utils.escapeAttribute(block.id) + '">番号</button>',
-      '<button type="button" class="small secondary" data-action="add-annotation" data-type="marker" data-block-id="' + utils.escapeAttribute(block.id) + '">マーカー</button>',
-      '<button type="button" class="small danger" data-action="delete-annotation" data-block-id="' + utils.escapeAttribute(block.id) + '">選択注釈を削除</button>',
+      '<button type="button" class="small secondary" data-action="open-annotation-modal" data-block-id="' + utils.escapeAttribute(block.id) + '">注釈編集</button>',
+      '<span class="annotation-count">注釈 ' + (block.annotations || []).length + '件</span>',
       '</div>',
       '<div class="image-actions no-print">',
       '<span class="image-name">' + utils.escapeHtml(block.imageName || "画像") + '</span>',
