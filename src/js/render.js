@@ -30,25 +30,14 @@
       box.innerHTML = '<div class="empty-state">STEPがありません。</div>';
       return;
     }
-    let normalCount = 0;
-    let errorCount = 0;
-    box.innerHTML = steps.map(function (step) {
+
+    const normalSteps = steps.filter(function (s) { return s.type !== "error"; });
+    const errorSteps = steps.filter(function (s) { return s.type === "error"; });
+
+    function stepItemHtml(step, badgeText, badgeClass, extraClass) {
       const active = step.id === state.store.currentStepId ? " active" : "";
-      const isError = step.type === "error";
-      let badgeText, badgeClass, itemClass;
-      if (isError) {
-        errorCount += 1;
-        badgeText = "エラー対応 " + errorCount;
-        badgeClass = "badge badge-error";
-        itemClass = "step-item step-item-error" + active;
-      } else {
-        normalCount += 1;
-        badgeText = "STEP " + normalCount;
-        badgeClass = "badge";
-        itemClass = "step-item" + active;
-      }
       return [
-        '<button type="button" class="' + itemClass + '" data-action="select-step" data-step-id="' + utils.escapeAttribute(step.id) + '">',
+        '<button type="button" class="step-item' + extraClass + active + '" data-action="select-step" data-step-id="' + utils.escapeAttribute(step.id) + '">',
         '<span class="step-line">',
         '<span class="' + badgeClass + '">' + badgeText + '</span>',
         '<span class="step-title">' + utils.escapeHtml(step.title || "無題") + '</span>',
@@ -56,7 +45,24 @@
         '<span class="step-meta">' + utils.escapeHtml(step.screen || "画面名なし") + " / ブロック " + (step.blocks || []).length + "件</span>",
         '</button>'
       ].join("");
+    }
+
+    let html = normalSteps.map(function (step, i) {
+      return stepItemHtml(step, "STEP " + (i + 1), "badge", "");
     }).join("");
+
+    if (!normalSteps.length) {
+      html += '<div class="empty-state">通常STEPがありません。</div>';
+    }
+
+    if (errorSteps.length) {
+      html += '<div class="step-list-divider"><span>エラー対応手順</span></div>';
+      html += errorSteps.map(function (step, i) {
+        return stepItemHtml(step, "エラー対応 " + (i + 1), "badge badge-error", " step-item-error");
+      }).join("");
+    }
+
+    box.innerHTML = html;
   }
 
   function renderEditor() {
@@ -135,7 +141,7 @@
       '</div>',
       '</div>',
       '</div>',
-      blockJumpSection(block),
+      step.type !== "error" ? blockJumpSection(block) : "",
       '</article>'
     ].join("");
   }

@@ -5,8 +5,14 @@
   const state = ns.state;
 
   function addStep() {
-    const step = state.createStep(state.store.project.steps.length + 1);
-    state.store.project.steps.push(step);
+    const normalCount = state.store.project.steps.filter(function (s) { return s.type !== "error"; }).length;
+    const step = state.createStep(normalCount + 1);
+    const firstErrorIndex = state.store.project.steps.findIndex(function (s) { return s.type === "error"; });
+    if (firstErrorIndex === -1) {
+      state.store.project.steps.push(step);
+    } else {
+      state.store.project.steps.splice(firstErrorIndex, 0, step);
+    }
     state.store.currentStepId = step.id;
     state.store.currentBlockId = step.blocks[0] ? step.blocks[0].id : null;
     state.store.selectedAnnotationId = null;

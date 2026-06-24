@@ -104,7 +104,7 @@
           ns.blocks.toggleStepType();
           return;
         case "add-block-jump": {
-          const card = actionNode.closest("[data-block-id]");
+          const card = actionNode.closest("article");
           const select = card && card.querySelector("[data-jump-step-select]");
           const targetStepId = select && select.value;
           if (targetStepId) {
