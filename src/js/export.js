@@ -104,6 +104,32 @@
     }
   }
 
+  async function importHtmlFile(file) {
+    if (!file) return;
+    try {
+      const text = await utils.readFileAsText(file);
+      const match = text.match(/<!--\s*PROCEDURE_EDITOR_DATA:([\s\S]*?)-->/);
+      if (!match) {
+        alert("このHTMLファイルにはProcedure Editorのデータが含まれていません。\n閲覧HTML出力で作成したファイルを選択してください。");
+        return;
+      }
+      const data = JSON.parse(match[1].trim());
+      const doc = new DOMParser().parseFromString(text, "text/html");
+      (data.steps || []).forEach(function (step) {
+        (step.blocks || []).forEach(function (block) {
+          if (block.image !== "__IMG__") return;
+          const imgEl = doc.querySelector('.annotated-image[data-block-id="' + block.id + '"] img');
+          block.image = imgEl ? imgEl.getAttribute("src") : null;
+        });
+      });
+      state.setProject(data);
+      ns.render.renderAll();
+      utils.toast("閲覧HTMLを読み込みました。");
+    } catch (error) {
+      alert("閲覧HTMLを読み込めませんでした: " + error.message);
+    }
+  }
+
   function downloadMarkdown() {
     const project = state.store.project;
     const baseName = utils.sanitizeFileName(project.cover.title, "手順書");
@@ -140,6 +166,7 @@
     generateMarkdown,
     exportJson,
     importJsonFile,
+    importHtmlFile,
     downloadMarkdown,
     copyMarkdown,
     printDocument

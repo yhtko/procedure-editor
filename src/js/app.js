@@ -169,6 +169,11 @@
       return;
     }
 
+    if (event.target.id === "htmlFileInput") {
+      importHtml(event.target.files[0], event.target);
+      return;
+    }
+
     if (event.target.dataset.action === "block-image-input") {
       ns.blocks.setBlockImageFromFile(event.target.dataset.blockId, event.target.files[0]);
       event.target.value = "";
@@ -291,6 +296,16 @@
       return;
     }
     await ns.exporter.importJsonFile(file);
+    input.value = "";
+  }
+
+  async function importHtml(file, input) {
+    if (!file) return;
+    if (state.store.dirty && !confirm("未保存の変更があります。HTMLを読み込みますか？")) {
+      input.value = "";
+      return;
+    }
+    await ns.exporter.importHtmlFile(file);
     input.value = "";
   }
 

@@ -99,6 +99,7 @@
 
     const css = viewerCss();
     const js = viewerScript().replace(/<\/script/gi, "<\\/script");
+    const dataComment = buildDataComment(project);
 
     return [
       "<!DOCTYPE html>",
@@ -125,9 +126,21 @@
       "</main>",
       '<div id="imageModal" class="image-modal" aria-hidden="true"><button type="button" class="modal-close" aria-label="閉じる">×</button><div class="modal-body"></div></div>',
       "<script>" + js + "</script>",
+      dataComment,
       "</body>",
       "</html>"
     ].join("");
+  }
+
+  function buildDataComment(project) {
+    const stripped = JSON.parse(JSON.stringify(project));
+    (stripped.steps || []).forEach(function (step) {
+      (step.blocks || []).forEach(function (block) {
+        if (block.image) block.image = "__IMG__";
+      });
+    });
+    const safe = JSON.stringify(stripped).replace(/-->/g, "--\\u003e");
+    return "<!-- PROCEDURE_EDITOR_DATA:" + safe + " -->";
   }
 
   function viewerImageMarkup(block) {
@@ -136,7 +149,7 @@
     }).join("");
     return [
       '<figure class="viewer-image-frame" tabindex="0" role="button" aria-label="画像を拡大">',
-      '<div class="annotated-image">',
+      '<div class="annotated-image" data-block-id="' + utils.escapeAttribute(block.id) + '">',
       '<img src="' + utils.escapeAttribute(block.image) + '" alt="' + utils.escapeAttribute(block.imageName || "スクリーンショット") + '">',
       annotations,
       "</div>",
