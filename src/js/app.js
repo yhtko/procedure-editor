@@ -100,17 +100,14 @@
           state.store.currentBlockId = actionNode.dataset.blockId;
           ns.annotations.deleteSelectedAnnotation();
           return;
-        case "toggle-step-type":
-          ns.blocks.toggleStepType();
-          return;
         case "add-block-jump": {
-          const card = actionNode.closest("[data-block-id]");
+          const card = actionNode.closest("article");
           const select = card && card.querySelector("[data-jump-step-select]");
           const targetStepId = select && select.value;
           if (targetStepId) {
             ns.blocks.addJumpToBlock(actionNode.dataset.blockId, targetStepId);
           } else {
-            utils.toast("ジャンプ先のエラー対応STEPを選択してください。");
+            utils.toast("ジャンプ先のSTEPを選択してください。");
           }
           return;
         }
@@ -166,6 +163,11 @@
     if (event.target.dataset.action === "block-image-input") {
       ns.blocks.setBlockImageFromFile(event.target.dataset.blockId, event.target.files[0]);
       event.target.value = "";
+      return;
+    }
+
+    if (event.target.id === "stepType") {
+      ns.blocks.setStepType(event.target.value);
       return;
     }
 

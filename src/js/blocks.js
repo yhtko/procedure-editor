@@ -5,8 +5,14 @@
   const state = ns.state;
 
   function addStep() {
-    const step = state.createStep(state.store.project.steps.length + 1);
-    state.store.project.steps.push(step);
+    const normalCount = state.store.project.steps.filter(function (s) { return s.type === "normal"; }).length;
+    const step = state.createStep(normalCount + 1);
+    const firstNonNormal = state.store.project.steps.findIndex(function (s) { return s.type !== "normal"; });
+    if (firstNonNormal === -1) {
+      state.store.project.steps.push(step);
+    } else {
+      state.store.project.steps.splice(firstNonNormal, 0, step);
+    }
     state.store.currentStepId = step.id;
     state.store.currentBlockId = step.blocks[0] ? step.blocks[0].id : null;
     state.store.selectedAnnotationId = null;
@@ -268,27 +274,38 @@
     await setBlockImageFromFile(block.id, file);
   }
 
-  function toggleStepType() {
+  function setStepType(newType) {
+    if (!state.STEP_TYPES.includes(newType)) return;
     const found = state.findStepById(state.store.currentStepId);
     if (!found) return;
     const step = found.step;
-    const wasError = step.type === "error";
-    step.type = wasError ? "normal" : "error";
+    if (step.type === newType) return;
 
-    if (!wasError) {
-      state.store.project.steps.splice(found.stepIndex, 1);
-      state.store.project.steps.push(step);
+    step.type = newType;
+    const steps = state.store.project.steps;
+    steps.splice(found.stepIndex, 1);
+
+    if (newType === "normal") {
+      const firstNonNormal = steps.findIndex(function (s) { return s.type !== "normal"; });
+      if (firstNonNormal === -1) steps.push(step);
+      else steps.splice(firstNonNormal, 0, step);
+    } else if (newType === "irregular") {
+      const firstError = steps.findIndex(function (s) { return s.type === "error"; });
+      if (firstError === -1) steps.push(step);
+      else steps.splice(firstError, 0, step);
+    } else {
+      steps.push(step);
     }
 
     state.markDirty();
     ns.render.renderAll();
-    utils.toast(wasError ? "通常STEPに変更しました。" : "エラー対応STEPに変更しました。末尾に移動しました。");
+    utils.toast("STEPタイプを変更しました。");
   }
 
   function addJumpToBlock(blockId, targetStepId) {
     const found = state.findBlockById(blockId);
     const target = state.findStepById(targetStepId);
-    if (!found || !target || target.step.type !== "error") return;
+    if (!found || !target || target.step.type === "normal") return;
 
     const exists = (found.block.jumps || []).some(function (j) {
       return j.targetStepId === targetStepId;
@@ -355,7 +372,7 @@
     reorderBlock,
     ensureEditableBlock,
     pasteImage,
-    toggleStepType,
+    setStepType,
     addJumpToBlock,
     removeJumpFromBlock
   };

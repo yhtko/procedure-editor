@@ -42,8 +42,9 @@
     });
 
     md += "## 操作手順\n\n";
-    const normalSteps = project.steps.filter(function (s) { return s.type !== "error"; });
-    const errorSteps = project.steps.filter(function (s) { return s.type === "error"; });
+    const normalSteps    = project.steps.filter(function (s) { return s.type === "normal"; });
+    const irregularSteps = project.steps.filter(function (s) { return s.type === "irregular"; });
+    const errorSteps     = project.steps.filter(function (s) { return s.type === "error"; });
 
     function renderStepMd(step, label, stepNum) {
       md += "### " + label + ": " + (step.title || "") + "\n\n";
@@ -56,7 +57,7 @@
         if (block.image) md += "![" + (block.imageName || "screenshot") + "](" + block.image + ")\n\n";
         if ((block.annotations || []).length) md += "> 注釈 " + block.annotations.length + "件\n\n";
         if ((block.jumps || []).length) {
-          md += "> ⚠ エラー対応ジャンプ: " + block.jumps.map(function (j) { return j.label || j.targetStepId; }).join(", ") + "\n\n";
+          md += "> ↗ ジャンプ設定: " + block.jumps.map(function (j) { return j.label || j.targetStepId; }).join(", ") + "\n\n";
         }
       });
     }
@@ -64,6 +65,12 @@
     normalSteps.forEach(function (step, i) {
       renderStepMd(step, "STEP " + (i + 1), i + 1);
     });
+    if (irregularSteps.length) {
+      md += "## 非定常業務手順\n\n";
+      irregularSteps.forEach(function (step, i) {
+        renderStepMd(step, "非定常 " + (i + 1), "N" + (i + 1));
+      });
+    }
     if (errorSteps.length) {
       md += "## エラー対応手順\n\n";
       errorSteps.forEach(function (step, i) {
