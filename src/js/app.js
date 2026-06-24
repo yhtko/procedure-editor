@@ -4,6 +4,7 @@
   const utils = ns.utils;
   const state = ns.state;
   let draggedBlockId = null;
+  let draggedStepId = null;
 
   document.addEventListener("DOMContentLoaded", init);
 
@@ -177,27 +178,39 @@
   }
 
   function handleDragStart(event) {
-    const item = event.target.closest("[data-sort-block-id]");
-    if (!item) return;
-    draggedBlockId = item.dataset.sortBlockId;
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", draggedBlockId);
+    const blockItem = event.target.closest("[data-sort-block-id]");
+    if (blockItem) {
+      draggedBlockId = blockItem.dataset.sortBlockId;
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", draggedBlockId);
+      return;
+    }
+    const stepItem = event.target.closest("[data-sort-step-id]");
+    if (stepItem) {
+      draggedStepId = stepItem.dataset.sortStepId;
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", draggedStepId);
+    }
   }
 
   function handleDragOver(event) {
     const dropzone = event.target.closest("[data-dropzone-block-id]");
     const sortItem = event.target.closest("[data-sort-block-id]");
-    if (!dropzone && !sortItem) return;
+    const stepItem = event.target.closest("[data-sort-step-id]");
+    if (!dropzone && !sortItem && !stepItem) return;
     event.preventDefault();
     if (dropzone) dropzone.classList.add("dragover");
     if (sortItem && draggedBlockId) sortItem.classList.add("drag-over");
+    if (stepItem && draggedStepId) stepItem.classList.add("drag-over");
   }
 
   function handleDragLeave(event) {
     const dropzone = event.target.closest("[data-dropzone-block-id]");
     const sortItem = event.target.closest("[data-sort-block-id]");
+    const stepItem = event.target.closest("[data-sort-step-id]");
     if (dropzone) dropzone.classList.remove("dragover");
     if (sortItem) sortItem.classList.remove("drag-over");
+    if (stepItem) stepItem.classList.remove("drag-over");
   }
 
   function handleDrop(event) {
@@ -218,6 +231,17 @@
       ns.blocks.reorderBlock(draggedBlockId, sortItem.dataset.sortBlockId, insertAfter);
       clearSortDragClasses();
       draggedBlockId = null;
+      return;
+    }
+
+    const stepItem = event.target.closest("[data-sort-step-id]");
+    if (stepItem && draggedStepId) {
+      event.preventDefault();
+      const rect = stepItem.getBoundingClientRect();
+      const insertAfter = event.clientY > rect.top + rect.height / 2;
+      ns.blocks.reorderStep(draggedStepId, stepItem.dataset.sortStepId, insertAfter);
+      clearStepDragClasses();
+      draggedStepId = null;
     }
   }
 
@@ -276,6 +300,12 @@
 
   function clearSortDragClasses() {
     utils.$$("[data-sort-block-id]").forEach(function (item) {
+      item.classList.remove("drag-over");
+    });
+  }
+
+  function clearStepDragClasses() {
+    utils.$$("[data-sort-step-id]").forEach(function (item) {
       item.classList.remove("drag-over");
     });
   }

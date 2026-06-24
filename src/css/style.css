@@ -310,6 +310,28 @@ textarea {
   border-radius: 6px 0 0 6px;
 }
 
+.step-drag-handle {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 0 4px 0 6px;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: grab;
+  opacity: 0.35;
+  transition: opacity 0.1s;
+}
+
+.step-item:hover .step-drag-handle {
+  opacity: 0.8;
+}
+
+.step-item.drag-over {
+  border-color: var(--primary);
+  background: #eef4ff;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
+}
+
 .step-item-delete {
   flex: 0 0 auto;
   min-height: unset;

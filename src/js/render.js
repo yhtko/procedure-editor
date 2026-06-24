@@ -38,7 +38,8 @@
     function stepItemHtml(step, badgeText, badgeClass, extraClass) {
       const active = step.id === state.store.currentStepId ? " active" : "";
       return [
-        '<div class="step-item' + extraClass + active + '">',
+        '<div class="step-item' + extraClass + active + '" draggable="true" data-sort-step-id="' + utils.escapeAttribute(step.id) + '">',
+        '<span class="step-drag-handle no-print" aria-hidden="true">↕</span>',
         '<button type="button" class="step-item-body" data-action="select-step" data-step-id="' + utils.escapeAttribute(step.id) + '">',
         '<span class="step-line">',
         '<span class="' + badgeClass + '">' + badgeText + '</span>',

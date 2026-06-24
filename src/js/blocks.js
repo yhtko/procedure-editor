@@ -238,6 +238,21 @@
     utils.toast("ブロックの帰属STEPを変更しました。");
   }
 
+  function reorderStep(draggedId, targetId, insertAfter) {
+    if (draggedId === targetId) return;
+    const steps = state.store.project.steps;
+    const from = steps.findIndex(function (s) { return s.id === draggedId; });
+    const targetIdx = steps.findIndex(function (s) { return s.id === targetId; });
+    if (from < 0 || targetIdx < 0) return;
+    const step = steps.splice(from, 1)[0];
+    let to = steps.findIndex(function (s) { return s.id === targetId; });
+    if (insertAfter) to += 1;
+    steps.splice(to, 0, step);
+    state.store.currentStepId = draggedId;
+    state.markDirty();
+    ns.render.renderAll();
+  }
+
   function reorderBlock(draggedId, targetId, insertAfter) {
     const step = state.getCurrentStep();
     if (!step || draggedId === targetId) return;
@@ -374,6 +389,7 @@
     setBlockImageFromFile,
     clearBlockImage,
     moveBlockToStep,
+    reorderStep,
     reorderBlock,
     ensureEditableBlock,
     pasteImage,
