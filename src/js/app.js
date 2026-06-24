@@ -100,9 +100,6 @@
           state.store.currentBlockId = actionNode.dataset.blockId;
           ns.annotations.deleteSelectedAnnotation();
           return;
-        case "toggle-step-type":
-          ns.blocks.toggleStepType();
-          return;
         case "add-block-jump": {
           const card = actionNode.closest("article");
           const select = card && card.querySelector("[data-jump-step-select]");
@@ -166,6 +163,11 @@
     if (event.target.dataset.action === "block-image-input") {
       ns.blocks.setBlockImageFromFile(event.target.dataset.blockId, event.target.files[0]);
       event.target.value = "";
+      return;
+    }
+
+    if (event.target.id === "stepType") {
+      ns.blocks.setStepType(event.target.value);
       return;
     }
 

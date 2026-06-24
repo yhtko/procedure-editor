@@ -902,31 +902,53 @@ body.annotation-modal-open {
   color: #fff;
 }
 
+.badge-irregular {
+  background: #7c3aed;
+  color: #fff;
+}
+
+.step-item-irregular {
+  border: 1px solid #c4b5fd;
+  border-left: 4px solid #7c3aed;
+  background: #f5f3ff;
+}
+
+.step-item-irregular:hover,
+.step-item-irregular.active {
+  border-color: #7c3aed;
+  border-left-width: 4px;
+  background: #ede9fe;
+}
+
+.step-list-divider-irregular {
+  color: #5b21b6;
+}
+
+.step-list-divider-irregular::before,
+.step-list-divider-irregular::after {
+  background: #7c3aed;
+}
+
+.block-head-irregular {
+  background: #ede9fe;
+  border-bottom-color: #c4b5fd;
+}
+
+.step-type-field {
+  grid-column: 1 / -1;
+}
+
+.step-type-field select {
+  max-width: 220px;
+}
+
 .step-item-error {
   border: 1px solid #fdba74;
   border-left: 4px solid #ea580c;
   background: #fff7ed;
 }
 
-button.step-type-toggle {
-  background: #fff7ed;
-  color: #92400e;
-  border: 1px solid #d97706;
-}
 
-button.step-type-toggle:hover {
-  background: #fef3c7;
-}
-
-button.step-type-toggle-back {
-  background: #e9eef6;
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-
-button.step-type-toggle-back:hover {
-  background: #dfe6f1;
-}
 
 .block-head-error {
   background: #fef3c7;

@@ -21,7 +21,7 @@
   const STEP_FIELDS = ["title", "screen", "summary", "check"];
   const BLOCK_FIELDS = ["title", "text", "image", "imageName"];
   const ANNOTATION_TYPES = ["circle", "arrow", "number", "marker"];
-  const STEP_TYPES = ["normal", "error"];
+  const STEP_TYPES = ["normal", "error", "irregular"];
 
   const store = {
     project: createProject(),

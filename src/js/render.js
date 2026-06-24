@@ -31,8 +31,9 @@
       return;
     }
 
-    const normalSteps = steps.filter(function (s) { return s.type !== "error"; });
-    const errorSteps = steps.filter(function (s) { return s.type === "error"; });
+    const normalSteps    = steps.filter(function (s) { return s.type === "normal"; });
+    const irregularSteps = steps.filter(function (s) { return s.type === "irregular"; });
+    const errorSteps     = steps.filter(function (s) { return s.type === "error"; });
 
     function stepItemHtml(step, badgeText, badgeClass, extraClass) {
       const active = step.id === state.store.currentStepId ? " active" : "";
@@ -53,6 +54,13 @@
 
     if (!normalSteps.length) {
       html += '<div class="empty-state">通常STEPがありません。</div>';
+    }
+
+    if (irregularSteps.length) {
+      html += '<div class="step-list-divider step-list-divider-irregular"><span>非定常業務</span></div>';
+      html += irregularSteps.map(function (step, i) {
+        return stepItemHtml(step, "非定常 " + (i + 1), "badge badge-irregular", " step-item-irregular");
+      }).join("");
     }
 
     if (errorSteps.length) {
@@ -81,6 +89,8 @@
     utils.$("screenName").value = step.screen || "";
     utils.$("stepSummary").value = step.summary || "";
     utils.$("stepCheck").value = step.check || "";
+    const typeSelect = utils.$("stepType");
+    if (typeSelect) typeSelect.value = step.type || "normal";
 
     renderBlocks();
     renderSortList();
@@ -112,12 +122,9 @@
 
     return [
       '<article class="block' + active + '" data-block-id="' + utils.escapeAttribute(block.id) + '">',
-      '<div class="block-head' + (step.type === "error" ? " block-head-error" : "") + '">',
+      '<div class="block-head' + (step.type === "error" ? " block-head-error" : step.type === "irregular" ? " block-head-irregular" : "") + '">',
       '<strong>ブロック ' + (index + 1) + '</strong>',
       '<div class="block-tools no-print">',
-      step.type === "error"
-        ? '<button type="button" class="small step-type-toggle-back" data-action="toggle-step-type">通常STEPに戻す</button>'
-        : '<button type="button" class="small step-type-toggle" data-action="toggle-step-type">⚠ エラー対応に変更</button>',
       '<button type="button" class="small secondary" data-action="move-block" data-block-id="' + utils.escapeAttribute(block.id) + '" data-dir="-1">上へ</button>',
       '<button type="button" class="small secondary" data-action="move-block" data-block-id="' + utils.escapeAttribute(block.id) + '" data-dir="1">下へ</button>',
       '<button type="button" class="small danger" data-action="delete-block" data-block-id="' + utils.escapeAttribute(block.id) + '">削除</button>',
