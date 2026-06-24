@@ -908,27 +908,31 @@ body.annotation-modal-open {
   background: #fff7ed;
 }
 
+button.step-type-toggle {
+  background: #fff7ed;
+  color: #92400e;
+  border: 1px solid #d97706;
+}
+
+button.step-type-toggle:hover {
+  background: #fef3c7;
+}
+
+button.step-type-toggle-back {
+  background: #e9eef6;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+button.step-type-toggle-back:hover {
+  background: #dfe6f1;
+}
+
 .block-head-error {
   background: #fef3c7;
   border-bottom-color: #fde68a;
 }
 
-.step-actions-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 0 10px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 12px;
-}
-
-.step-actions-left,
-.step-actions-right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
 
 .block-add-bottom {
   margin-top: 12px;

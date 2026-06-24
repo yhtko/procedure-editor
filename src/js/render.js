@@ -82,13 +82,6 @@
     utils.$("stepSummary").value = step.summary || "";
     utils.$("stepCheck").value = step.check || "";
 
-    const typeBtn = utils.$("toggleStepType");
-    if (typeBtn) {
-      const isError = step.type === "error";
-      typeBtn.textContent = isError ? "通常STEPに戻す" : "エラー対応に変更";
-      typeBtn.className = isError ? "danger" : "secondary";
-    }
-
     renderBlocks();
     renderSortList();
   }
@@ -122,6 +115,9 @@
       '<div class="block-head' + (step.type === "error" ? " block-head-error" : "") + '">',
       '<strong>ブロック ' + (index + 1) + '</strong>',
       '<div class="block-tools no-print">',
+      step.type === "error"
+        ? '<button type="button" class="small step-type-toggle-back" data-action="toggle-step-type">通常STEPに戻す</button>'
+        : '<button type="button" class="small step-type-toggle" data-action="toggle-step-type">⚠ エラー対応に変更</button>',
       '<button type="button" class="small secondary" data-action="move-block" data-block-id="' + utils.escapeAttribute(block.id) + '" data-dir="-1">上へ</button>',
       '<button type="button" class="small secondary" data-action="move-block" data-block-id="' + utils.escapeAttribute(block.id) + '" data-dir="1">下へ</button>',
       '<button type="button" class="small danger" data-action="delete-block" data-block-id="' + utils.escapeAttribute(block.id) + '">削除</button>',
