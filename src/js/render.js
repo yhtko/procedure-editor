@@ -30,12 +30,27 @@
       box.innerHTML = '<div class="empty-state">STEPがありません。</div>';
       return;
     }
-    box.innerHTML = steps.map(function (step, index) {
+    let normalCount = 0;
+    let errorCount = 0;
+    box.innerHTML = steps.map(function (step) {
       const active = step.id === state.store.currentStepId ? " active" : "";
+      const isError = step.type === "error";
+      let badgeText, badgeClass, itemClass;
+      if (isError) {
+        errorCount += 1;
+        badgeText = "エラー対応 " + errorCount;
+        badgeClass = "badge badge-error";
+        itemClass = "step-item step-item-error" + active;
+      } else {
+        normalCount += 1;
+        badgeText = "STEP " + normalCount;
+        badgeClass = "badge";
+        itemClass = "step-item" + active;
+      }
       return [
-        '<button type="button" class="step-item' + active + '" data-action="select-step" data-step-id="' + utils.escapeAttribute(step.id) + '">',
+        '<button type="button" class="' + itemClass + '" data-action="select-step" data-step-id="' + utils.escapeAttribute(step.id) + '">',
         '<span class="step-line">',
-        '<span class="badge">STEP ' + (index + 1) + '</span>',
+        '<span class="' + badgeClass + '">' + badgeText + '</span>',
         '<span class="step-title">' + utils.escapeHtml(step.title || "無題") + '</span>',
         '</span>',
         '<span class="step-meta">' + utils.escapeHtml(step.screen || "画面名なし") + " / ブロック " + (step.blocks || []).length + "件</span>",
@@ -60,6 +75,14 @@
     utils.$("screenName").value = step.screen || "";
     utils.$("stepSummary").value = step.summary || "";
     utils.$("stepCheck").value = step.check || "";
+
+    const typeBtn = utils.$("toggleStepType");
+    if (typeBtn) {
+      const isError = step.type === "error";
+      typeBtn.textContent = isError ? "通常STEPに戻す" : "エラー対応に変更";
+      typeBtn.className = isError ? "danger" : "secondary";
+    }
+
     renderBlocks();
     renderSortList();
   }
@@ -112,7 +135,62 @@
       '</div>',
       '</div>',
       '</div>',
+      blockJumpSection(block),
       '</article>'
+    ].join("");
+  }
+
+  function blockJumpSection(block) {
+    const errorSteps = state.store.project.steps.filter(function (s) { return s.type === "error"; });
+    const jumps = block.jumps || [];
+    const jumpedIds = jumps.map(function (j) { return j.targetStepId; });
+
+    const errorNums = {};
+    let ec = 0;
+    state.store.project.steps.forEach(function (s) {
+      if (s.type === "error") { ec += 1; errorNums[s.id] = ec; }
+    });
+
+    const available = errorSteps.filter(function (s) { return !jumpedIds.includes(s.id); });
+
+    const jumpTags = jumps.map(function (jump) {
+      const num = errorNums[jump.targetStepId] || "?";
+      return [
+        '<span class="jump-tag">',
+        '<span class="jump-icon">⚠</span>',
+        ' エラー対応 ' + num + ': ' + utils.escapeHtml(jump.label || ""),
+        '<button type="button" class="jump-tag-remove" data-action="delete-block-jump"',
+        ' data-block-id="' + utils.escapeAttribute(block.id) + '"',
+        ' data-jump-id="' + utils.escapeAttribute(jump.id) + '">×</button>',
+        '</span>'
+      ].join("");
+    }).join("");
+
+    let addHtml;
+    if (errorSteps.length === 0) {
+      addHtml = '<span class="jump-hint">エラー対応STEPがありません</span>';
+    } else if (available.length === 0) {
+      addHtml = '<span class="jump-hint">すべてのエラー対応STEPを追加済みです</span>';
+    } else {
+      const options = ['<option value="">選択...</option>'].concat(
+        available.map(function (s) {
+          return '<option value="' + utils.escapeAttribute(s.id) + '">エラー対応 ' + errorNums[s.id] + ': ' + utils.escapeHtml(s.title || "") + '</option>';
+        })
+      ).join("");
+      addHtml = [
+        '<select class="jump-select" data-jump-step-select data-block-id="' + utils.escapeAttribute(block.id) + '">' + options + '</select>',
+        '<button type="button" class="small secondary" data-action="add-block-jump" data-block-id="' + utils.escapeAttribute(block.id) + '">追加</button>'
+      ].join("");
+    }
+
+    return [
+      '<div class="block-jump-section no-print">',
+      '<div class="block-jump-row">',
+      '<span class="block-jump-label">⚠ エラー対応ジャンプ</span>',
+      addHtml,
+      '</div>',
+      jumps.length ? '<div class="block-jump-list">' + jumpTags + '</div>' : '',
+      '</div>'
     ].join("");
   }
 
@@ -169,6 +247,13 @@
 
   function renderPreview() {
     const cover = state.store.project.cover;
+    const allSteps = state.store.project.steps;
+    const normalSteps = allSteps.filter(function (s) { return s.type !== "error"; });
+    const errorSteps = allSteps.filter(function (s) { return s.type === "error"; });
+
+    const errorNums = {};
+    errorSteps.forEach(function (s, i) { errorNums[s.id] = i + 1; });
+
     const rows = ns.exporter.coverRows(cover).map(function (row) {
       return '<tr><th>' + utils.escapeHtml(row[0]) + '</th><td>' + utils.textToHtml(row[1] || "") + '</td></tr>';
     }).join("");
@@ -180,25 +265,44 @@
       html += '<section' + highlight + '><h2>' + utils.escapeHtml(section[0]) + '</h2><p>' + utils.textToHtml(section[1]) + '</p></section>';
     });
     html += '<div style="page-break-before:always"></div><h2>操作手順</h2>';
-    if (!state.store.project.steps.length) {
+    if (!normalSteps.length && !errorSteps.length) {
       html += '<p class="empty-state">STEPがありません。</p>';
     }
-    state.store.project.steps.forEach(function (step, stepIndex) {
-      html += '<section class="preview-step">';
-      html += '<h3>STEP ' + (stepIndex + 1) + ' ' + utils.escapeHtml(step.title || "") + '</h3>';
-      if (step.screen) html += '<p><strong>画面名:</strong> ' + utils.escapeHtml(step.screen) + '</p>';
-      if (step.summary) html += '<p>' + utils.textToHtml(step.summary) + '</p>';
-      if (step.check) html += '<aside class="preview-callout preview-callout-warning"><h4>注意・確認ポイント</h4><p>' + utils.textToHtml(step.check) + '</p></aside>';
-      (step.blocks || []).forEach(function (block, blockIndex) {
-        html += '<div class="preview-block">';
-        html += '<h4>' + (stepIndex + 1) + '.' + (blockIndex + 1) + ' ' + utils.escapeHtml(block.title || "") + '</h4>';
-        if (block.text) html += '<p>' + utils.textToHtml(block.text) + '</p>';
-        if (block.image) html += ns.annotations.imageMarkup(block, "preview");
-        html += '</div>';
-      });
-      html += '</section>';
+    normalSteps.forEach(function (step, i) {
+      html += previewStepHtml(step, "STEP " + (i + 1), i + 1, false, errorNums);
     });
+    if (errorSteps.length) {
+      html += '<div class="preview-error-divider" style="page-break-before:always"><h2>エラー対応手順</h2></div>';
+      errorSteps.forEach(function (step, i) {
+        html += previewStepHtml(step, "エラー対応 " + (i + 1), "E" + (i + 1), true, errorNums);
+      });
+    }
     utils.$("previewArea").innerHTML = html;
+  }
+
+  function previewStepHtml(step, label, stepNum, isError, errorNums) {
+    let html = '<section class="preview-step' + (isError ? " preview-step-error" : "") + '" id="step-' + utils.escapeAttribute(step.id) + '">';
+    html += '<h3>' + label + ' ' + utils.escapeHtml(step.title || "") + '</h3>';
+    if (step.screen) html += '<p><strong>画面名:</strong> ' + utils.escapeHtml(step.screen) + '</p>';
+    if (step.summary) html += '<p>' + utils.textToHtml(step.summary) + '</p>';
+    if (step.check) html += '<aside class="preview-callout preview-callout-warning"><h4>注意・確認ポイント</h4><p>' + utils.textToHtml(step.check) + '</p></aside>';
+    (step.blocks || []).forEach(function (block, blockIndex) {
+      html += '<div class="preview-block">';
+      html += '<h4>' + stepNum + '.' + (blockIndex + 1) + ' ' + utils.escapeHtml(block.title || "") + '</h4>';
+      if (block.text) html += '<p>' + utils.textToHtml(block.text) + '</p>';
+      if (block.image) html += ns.annotations.imageMarkup(block, "preview");
+      if ((block.jumps || []).length) {
+        html += '<div class="preview-jump-row">';
+        block.jumps.forEach(function (jump) {
+          const num = errorNums[jump.targetStepId] || "?";
+          html += '<a href="#step-' + utils.escapeAttribute(jump.targetStepId) + '" class="preview-jump-button">⚠ エラー対応 ' + num + ': ' + utils.escapeHtml(jump.label || "") + '</a>';
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+    });
+    html += '</section>';
+    return html;
   }
 
   function renderMarkdown() {

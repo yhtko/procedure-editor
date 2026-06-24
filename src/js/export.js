@@ -42,23 +42,34 @@
     });
 
     md += "## 操作手順\n\n";
-    project.steps.forEach(function (step, stepIndex) {
-      md += "### STEP " + (stepIndex + 1) + ": " + (step.title || "") + "\n\n";
+    const normalSteps = project.steps.filter(function (s) { return s.type !== "error"; });
+    const errorSteps = project.steps.filter(function (s) { return s.type === "error"; });
+
+    function renderStepMd(step, label, stepNum) {
+      md += "### " + label + ": " + (step.title || "") + "\n\n";
       if (step.screen) md += "**画面名**: " + step.screen + "\n\n";
       if (step.summary) md += step.summary + "\n\n";
       if (step.check) md += "**注意・確認ポイント**\n\n" + step.check + "\n\n";
-
       (step.blocks || []).forEach(function (block, blockIndex) {
-        md += "#### " + (stepIndex + 1) + "." + (blockIndex + 1) + " " + (block.title || "") + "\n\n";
+        md += "#### " + stepNum + "." + (blockIndex + 1) + " " + (block.title || "") + "\n\n";
         if (block.text) md += block.text + "\n\n";
-        if (block.image) {
-          md += "![" + (block.imageName || "screenshot") + "](" + block.image + ")\n\n";
-        }
-        if ((block.annotations || []).length) {
-          md += "> 注釈 " + block.annotations.length + "件\n\n";
+        if (block.image) md += "![" + (block.imageName || "screenshot") + "](" + block.image + ")\n\n";
+        if ((block.annotations || []).length) md += "> 注釈 " + block.annotations.length + "件\n\n";
+        if ((block.jumps || []).length) {
+          md += "> ⚠ エラー対応ジャンプ: " + block.jumps.map(function (j) { return j.label || j.targetStepId; }).join(", ") + "\n\n";
         }
       });
+    }
+
+    normalSteps.forEach(function (step, i) {
+      renderStepMd(step, "STEP " + (i + 1), i + 1);
     });
+    if (errorSteps.length) {
+      md += "## エラー対応手順\n\n";
+      errorSteps.forEach(function (step, i) {
+        renderStepMd(step, "エラー対応 " + (i + 1), "E" + (i + 1));
+      });
+    }
 
     return md;
   }
