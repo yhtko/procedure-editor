@@ -151,24 +151,28 @@
   }
 
   function blockJumpSection(block) {
-    const errorSteps = state.store.project.steps.filter(function (s) { return s.type === "error"; });
+    const nonNormalSteps = state.store.project.steps.filter(function (s) { return s.type !== "normal"; });
     const jumps = block.jumps || [];
     const jumpedIds = jumps.map(function (j) { return j.targetStepId; });
 
-    const errorNums = {};
-    let ec = 0;
+    const stepNums = {};
+    let ec = 0, ic = 0;
     state.store.project.steps.forEach(function (s) {
-      if (s.type === "error") { ec += 1; errorNums[s.id] = ec; }
+      if (s.type === "error") { ec += 1; stepNums[s.id] = { label: "エラー対応 " + ec, type: "error" }; }
+      else if (s.type === "irregular") { ic += 1; stepNums[s.id] = { label: "非定常 " + ic, type: "irregular" }; }
     });
 
-    const available = errorSteps.filter(function (s) { return !jumpedIds.includes(s.id); });
+    const available = nonNormalSteps.filter(function (s) { return !jumpedIds.includes(s.id); });
 
     const jumpTags = jumps.map(function (jump) {
-      const num = errorNums[jump.targetStepId] || "?";
+      const info = stepNums[jump.targetStepId] || { label: "?", type: "error" };
+      const isIrregular = info.type === "irregular";
+      const icon = isIrregular ? "↗" : "⚠";
+      const tagClass = isIrregular ? "jump-tag jump-tag-irregular" : "jump-tag";
       return [
-        '<span class="jump-tag">',
-        '<span class="jump-icon">⚠</span>',
-        ' エラー対応 ' + num + ': ' + utils.escapeHtml(jump.label || ""),
+        '<span class="' + tagClass + '">',
+        '<span class="jump-icon">' + icon + '</span>',
+        ' ' + info.label + ': ' + utils.escapeHtml(jump.label || ""),
         '<button type="button" class="jump-tag-remove" data-action="delete-block-jump"',
         ' data-block-id="' + utils.escapeAttribute(block.id) + '"',
         ' data-jump-id="' + utils.escapeAttribute(jump.id) + '">×</button>',
@@ -177,14 +181,15 @@
     }).join("");
 
     let addHtml;
-    if (errorSteps.length === 0) {
-      addHtml = '<span class="jump-hint">エラー対応STEPがありません</span>';
+    if (nonNormalSteps.length === 0) {
+      addHtml = '<span class="jump-hint">ジャンプ先のSTEPがありません</span>';
     } else if (available.length === 0) {
-      addHtml = '<span class="jump-hint">すべてのエラー対応STEPを追加済みです</span>';
+      addHtml = '<span class="jump-hint">すべてのジャンプ先STEPを追加済みです</span>';
     } else {
       const options = ['<option value="">選択...</option>'].concat(
         available.map(function (s) {
-          return '<option value="' + utils.escapeAttribute(s.id) + '">エラー対応 ' + errorNums[s.id] + ': ' + utils.escapeHtml(s.title || "") + '</option>';
+          const info = stepNums[s.id] || { label: s.title || "?", type: s.type };
+          return '<option value="' + utils.escapeAttribute(s.id) + '">' + info.label + ': ' + utils.escapeHtml(s.title || "") + '</option>';
         })
       ).join("");
       addHtml = [
@@ -196,7 +201,7 @@
     return [
       '<div class="block-jump-section no-print">',
       '<div class="block-jump-row">',
-      '<span class="block-jump-label">⚠ エラー対応ジャンプ</span>',
+      '<span class="block-jump-label">↗ ジャンプ設定</span>',
       addHtml,
       '</div>',
       jumps.length ? '<div class="block-jump-list">' + jumpTags + '</div>' : '',
@@ -258,11 +263,14 @@
   function renderPreview() {
     const cover = state.store.project.cover;
     const allSteps = state.store.project.steps;
-    const normalSteps = allSteps.filter(function (s) { return s.type !== "error"; });
-    const errorSteps = allSteps.filter(function (s) { return s.type === "error"; });
+    const normalSteps    = allSteps.filter(function (s) { return s.type === "normal"; });
+    const irregularSteps = allSteps.filter(function (s) { return s.type === "irregular"; });
+    const errorSteps     = allSteps.filter(function (s) { return s.type === "error"; });
 
-    const errorNums = {};
-    errorSteps.forEach(function (s, i) { errorNums[s.id] = i + 1; });
+    const stepNums = {};
+    normalSteps.forEach(function (s, i) { stepNums[s.id] = { label: "STEP " + (i + 1), num: i + 1, type: "normal" }; });
+    irregularSteps.forEach(function (s, i) { stepNums[s.id] = { label: "非定常 " + (i + 1), num: "N" + (i + 1), type: "irregular" }; });
+    errorSteps.forEach(function (s, i) { stepNums[s.id] = { label: "エラー対応 " + (i + 1), num: "E" + (i + 1), type: "error" }; });
 
     const rows = ns.exporter.coverRows(cover).map(function (row) {
       return '<tr><th>' + utils.escapeHtml(row[0]) + '</th><td>' + utils.textToHtml(row[1] || "") + '</td></tr>';
@@ -275,23 +283,30 @@
       html += '<section' + highlight + '><h2>' + utils.escapeHtml(section[0]) + '</h2><p>' + utils.textToHtml(section[1]) + '</p></section>';
     });
     html += '<div style="page-break-before:always"></div><h2>操作手順</h2>';
-    if (!normalSteps.length && !errorSteps.length) {
+    if (!normalSteps.length && !irregularSteps.length && !errorSteps.length) {
       html += '<p class="empty-state">STEPがありません。</p>';
     }
     normalSteps.forEach(function (step, i) {
-      html += previewStepHtml(step, "STEP " + (i + 1), i + 1, false, errorNums);
+      html += previewStepHtml(step, "STEP " + (i + 1), i + 1, "normal", stepNums);
     });
+    if (irregularSteps.length) {
+      html += '<div class="preview-irregular-divider" style="page-break-before:always"><h2>非定常業務手順</h2></div>';
+      irregularSteps.forEach(function (step, i) {
+        html += previewStepHtml(step, "非定常 " + (i + 1), "N" + (i + 1), "irregular", stepNums);
+      });
+    }
     if (errorSteps.length) {
       html += '<div class="preview-error-divider" style="page-break-before:always"><h2>エラー対応手順</h2></div>';
       errorSteps.forEach(function (step, i) {
-        html += previewStepHtml(step, "エラー対応 " + (i + 1), "E" + (i + 1), true, errorNums);
+        html += previewStepHtml(step, "エラー対応 " + (i + 1), "E" + (i + 1), "error", stepNums);
       });
     }
     utils.$("previewArea").innerHTML = html;
   }
 
-  function previewStepHtml(step, label, stepNum, isError, errorNums) {
-    let html = '<section class="preview-step' + (isError ? " preview-step-error" : "") + '" id="step-' + utils.escapeAttribute(step.id) + '">';
+  function previewStepHtml(step, label, stepNum, stepType, stepNums) {
+    const typeClass = stepType === "error" ? " preview-step-error" : stepType === "irregular" ? " preview-step-irregular" : "";
+    let html = '<section class="preview-step' + typeClass + '" id="step-' + utils.escapeAttribute(step.id) + '">';
     html += '<h3>' + label + ' ' + utils.escapeHtml(step.title || "") + '</h3>';
     if (step.screen) html += '<p><strong>画面名:</strong> ' + utils.escapeHtml(step.screen) + '</p>';
     if (step.summary) html += '<p>' + utils.textToHtml(step.summary) + '</p>';
@@ -304,8 +319,11 @@
       if ((block.jumps || []).length) {
         html += '<div class="preview-jump-row">';
         block.jumps.forEach(function (jump) {
-          const num = errorNums[jump.targetStepId] || "?";
-          html += '<a href="#step-' + utils.escapeAttribute(jump.targetStepId) + '" class="preview-jump-button">⚠ エラー対応 ' + num + ': ' + utils.escapeHtml(jump.label || "") + '</a>';
+          const info = stepNums[jump.targetStepId] || { label: "?", type: "error" };
+          const isIrregular = info.type === "irregular";
+          const btnClass = isIrregular ? " preview-jump-button-irregular" : "";
+          const icon = isIrregular ? "↗" : "⚠";
+          html += '<a href="#step-' + utils.escapeAttribute(jump.targetStepId) + '" class="preview-jump-button' + btnClass + '">' + icon + ' ' + info.label + ': ' + utils.escapeHtml(jump.label || "") + '</a>';
         });
         html += '</div>';
       }

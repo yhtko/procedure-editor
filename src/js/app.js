@@ -107,7 +107,7 @@
           if (targetStepId) {
             ns.blocks.addJumpToBlock(actionNode.dataset.blockId, targetStepId);
           } else {
-            utils.toast("ジャンプ先のエラー対応STEPを選択してください。");
+            utils.toast("ジャンプ先のSTEPを選択してください。");
           }
           return;
         }

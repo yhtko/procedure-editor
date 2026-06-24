@@ -15,28 +15,39 @@
   function buildViewerHtml(project) {
     const cover = project.cover;
     const allSteps = project.steps;
-    const normalSteps = allSteps.filter(function (s) { return s.type !== "error"; });
-    const errorSteps = allSteps.filter(function (s) { return s.type === "error"; });
+    const normalSteps    = allSteps.filter(function (s) { return s.type === "normal"; });
+    const irregularSteps = allSteps.filter(function (s) { return s.type === "irregular"; });
+    const errorSteps     = allSteps.filter(function (s) { return s.type === "error"; });
 
-    const errorNums = {};
-    errorSteps.forEach(function (s, i) { errorNums[s.id] = i + 1; });
+    const stepNums = {};
+    normalSteps.forEach(function (s, i) { stepNums[s.id] = { label: "STEP " + (i + 1), type: "normal" }; });
+    irregularSteps.forEach(function (s, i) { stepNums[s.id] = { label: "非定常 " + (i + 1), type: "irregular" }; });
+    errorSteps.forEach(function (s, i) { stepNums[s.id] = { label: "エラー対応 " + (i + 1), type: "error" }; });
 
     const normalToc = normalSteps.map(function (step, i) {
       return '<li><a href="#step-' + utils.escapeAttribute(step.id) + '">STEP ' + (i + 1) + " " + utils.escapeHtml(step.title || "") + "</a></li>";
     }).join("");
+    const irregularToc = irregularSteps.length
+      ? '<li class="toc-section-label toc-irregular-label">非定常業務手順</li>' + irregularSteps.map(function (step, i) {
+          return '<li><a href="#step-' + utils.escapeAttribute(step.id) + '">非定常 ' + (i + 1) + " " + utils.escapeHtml(step.title || "") + "</a></li>";
+        }).join("")
+      : "";
     const errorToc = errorSteps.length
-      ? '<li class="toc-error-label">エラー対応手順</li>' + errorSteps.map(function (step, i) {
+      ? '<li class="toc-section-label toc-error-label">エラー対応手順</li>' + errorSteps.map(function (step, i) {
           return '<li><a href="#step-' + utils.escapeAttribute(step.id) + '">エラー対応 ' + (i + 1) + " " + utils.escapeHtml(step.title || "") + "</a></li>";
         }).join("")
       : "";
-    const toc = normalToc + errorToc;
+    const toc = normalToc + irregularToc + errorToc;
 
-    function buildStep(step, label, stepNum, isError) {
+    function buildStep(step, label, stepNum, stepType) {
       const blocks = (step.blocks || []).map(function (block, blockIndex) {
         const jumpsHtml = (block.jumps || []).length
           ? '<div class="viewer-jump-row">' + block.jumps.map(function (jump) {
-              const num = errorNums[jump.targetStepId] || "?";
-              return '<a href="#step-' + utils.escapeAttribute(jump.targetStepId) + '" class="viewer-jump-button">⚠ エラー対応 ' + num + ': ' + utils.escapeHtml(jump.label || "") + '</a>';
+              const info = stepNums[jump.targetStepId] || { label: "?", type: "error" };
+              const isIrregular = info.type === "irregular";
+              const btnClass = isIrregular ? "viewer-jump-button viewer-jump-button-irregular" : "viewer-jump-button";
+              const icon = isIrregular ? "↗" : "⚠";
+              return '<a href="#step-' + utils.escapeAttribute(jump.targetStepId) + '" class="' + btnClass + '">' + icon + ' ' + info.label + ': ' + utils.escapeHtml(jump.label || "") + '</a>';
             }).join("") + '</div>'
           : "";
         return [
@@ -49,8 +60,9 @@
         ].join("");
       }).join("");
 
+      const typeClass = stepType === "error" ? " viewer-step-error" : stepType === "irregular" ? " viewer-step-irregular" : "";
       return [
-        '<section id="step-' + utils.escapeAttribute(step.id) + '" class="viewer-step' + (isError ? " viewer-step-error" : "") + '">',
+        '<section id="step-' + utils.escapeAttribute(step.id) + '" class="viewer-step' + typeClass + '">',
         '<h3>' + label + " " + utils.escapeHtml(step.title || "") + "</h3>",
         step.screen ? '<p><strong>画面名:</strong> ' + utils.escapeHtml(step.screen) + "</p>" : "",
         step.summary ? '<p>' + utils.textToHtml(step.summary) + "</p>" : "",
@@ -61,14 +73,19 @@
     }
 
     const normalHtml = normalSteps.map(function (step, i) {
-      return buildStep(step, "STEP " + (i + 1), i + 1, false);
+      return buildStep(step, "STEP " + (i + 1), i + 1, "normal");
     }).join("");
-    const errorSectionHtml = errorSteps.length
-      ? '<div class="viewer-error-section"><h2>エラー対応手順</h2>' + errorSteps.map(function (step, i) {
-          return buildStep(step, "エラー対応 " + (i + 1), "E" + (i + 1), true);
+    const irregularSectionHtml = irregularSteps.length
+      ? '<div class="viewer-irregular-section"><h2>非定常業務手順</h2>' + irregularSteps.map(function (step, i) {
+          return buildStep(step, "非定常 " + (i + 1), "N" + (i + 1), "irregular");
         }).join("") + "</div>"
       : "";
-    const steps = normalHtml + errorSectionHtml;
+    const errorSectionHtml = errorSteps.length
+      ? '<div class="viewer-error-section"><h2>エラー対応手順</h2>' + errorSteps.map(function (step, i) {
+          return buildStep(step, "エラー対応 " + (i + 1), "E" + (i + 1), "error");
+        }).join("") + "</div>"
+      : "";
+    const steps = normalHtml + irregularSectionHtml + errorSectionHtml;
 
     const coverRows = ns.exporter.coverRows(cover).map(function (row) {
       return '<tr><th>' + utils.escapeHtml(row[0]) + '</th><td>' + utils.textToHtml(row[1] || "") + "</td></tr>";
@@ -162,11 +179,14 @@
       ".content{border:1px solid #d7dee8;border-radius:8px;background:#fff;padding:28px;box-shadow:0 10px 24px rgba(15,23,42,.08)}",
       ".cover table{width:100%;border-collapse:collapse}.cover th,.cover td{border:1px solid #cbd5e1;padding:9px;text-align:left;vertical-align:top}.cover th{width:28%;background:#f1f5f9}",
       ".viewer-callout{margin:18px 0;padding:13px 15px;border:1px solid #f6d88a;border-left:5px solid #d97706;border-radius:8px;background:#fffbeb}.viewer-callout h2,.viewer-callout h4{margin:0 0 7px;color:#7c2d12;font-size:16px}.viewer-callout p{margin:0}",
-      ".viewer-step{margin-top:30px;padding-top:16px;border-top:3px solid #1e293b}.viewer-step-error{border-top-color:#d97706}.viewer-block{margin:18px 0 24px}.viewer-block h4{margin:0 0 8px}",
+      ".viewer-step{margin-top:30px;padding-top:16px;border-top:3px solid #1e293b}.viewer-step-error{border-top-color:#d97706}.viewer-step-irregular{border-top-color:#7c3aed}.viewer-block{margin:18px 0 24px}.viewer-block h4{margin:0 0 8px}",
       ".viewer-error-section{margin-top:48px;padding-top:20px;border-top:3px solid #d97706}.viewer-error-section h2{color:#92400e;font-size:20px;margin:0 0 12px}",
+      ".viewer-irregular-section{margin-top:48px;padding-top:20px;border-top:3px solid #7c3aed}.viewer-irregular-section h2{color:#5b21b6;font-size:20px;margin:0 0 12px}",
       ".viewer-jump-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}",
       ".viewer-jump-button{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;border:1.5px solid #d97706;background:#fffbeb;color:#92400e;font:inherit;font-size:13px;font-weight:700;text-decoration:none;cursor:pointer}.viewer-jump-button:hover{background:#fef3c7}",
-      ".toc-error-label{margin:10px 0 4px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:#92400e;list-style:none;padding-left:0}",
+      ".viewer-jump-button-irregular{border-color:#7c3aed;background:#ede9fe;color:#5b21b6}.viewer-jump-button-irregular:hover{background:#ddd6fe}",
+      ".toc-section-label{margin:10px 0 4px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;list-style:none;padding-left:0}",
+      ".toc-error-label{color:#92400e}.toc-irregular-label{color:#5b21b6}",
       ".viewer-image-frame{display:inline-block;max-width:100%;margin:10px 0 0;cursor:zoom-in}.viewer-image-frame figcaption{margin-top:4px;color:#667085;font-size:12px}.annotated-image{position:relative;display:inline-block;line-height:0;max-width:100%}.annotated-image img{display:block;max-width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff}",
       ".annotation{position:absolute;min-width:14px;min-height:14px;color:#ef4444;line-height:1}.annotation-circle,.annotation-number{min-width:0;min-height:0;height:auto;aspect-ratio:1/1;border-radius:50%}.annotation-circle{border:3px solid currentColor;background:transparent}.annotation-marker{border:3px solid currentColor;background:color-mix(in srgb,currentColor 18%,transparent);border-radius:0}.annotation-number{display:flex;align-items:center;justify-content:center;border:2px solid #fff;background:currentColor;box-shadow:0 1px 7px rgba(15,23,42,.32)}.annotation-number span{color:#fff;font-weight:700;font-size:clamp(12px,2.6vw,30px);line-height:1}.annotation-arrow{overflow:visible}.annotation-arrow svg{display:block;width:100%;height:100%;overflow:visible}.annotation-arrow line{stroke-width:3;stroke-linecap:round;vector-effect:non-scaling-stroke}",
       ".image-modal{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;padding:40px;background:rgba(15,23,42,.78)}.image-modal.open{display:flex}.modal-body{max-width:96vw;max-height:92vh;overflow:auto}.modal-body .viewer-image-frame{cursor:default}.modal-body img{max-width:92vw;max-height:86vh}.modal-close{position:absolute;right:18px;top:14px;border:0;border-radius:6px;background:#fff;color:#172033;font-size:28px;line-height:1;padding:4px 11px;cursor:pointer}",

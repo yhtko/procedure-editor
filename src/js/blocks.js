@@ -305,7 +305,7 @@
   function addJumpToBlock(blockId, targetStepId) {
     const found = state.findBlockById(blockId);
     const target = state.findStepById(targetStepId);
-    if (!found || !target || target.step.type !== "error") return;
+    if (!found || !target || target.step.type === "normal") return;
 
     const exists = (found.block.jumps || []).some(function (j) {
       return j.targetStepId === targetStepId;

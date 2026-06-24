@@ -1090,6 +1090,10 @@ body.annotation-modal-open {
   border-top-color: #d97706;
 }
 
+.preview-step-irregular {
+  border-top-color: #7c3aed;
+}
+
 .preview-error-divider {
   margin-top: 48px;
   padding-top: 20px;
@@ -1100,6 +1104,43 @@ body.annotation-modal-open {
   color: #92400e;
   font-size: 22px;
   margin: 0;
+}
+
+.preview-irregular-divider {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 3px solid #7c3aed;
+}
+
+.preview-irregular-divider h2 {
+  color: #5b21b6;
+  font-size: 22px;
+  margin: 0;
+}
+
+.jump-tag-irregular {
+  border-color: #7c3aed;
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.jump-tag-irregular .jump-tag-remove {
+  color: #5b21b6;
+}
+
+.jump-tag-irregular .jump-tag-remove:hover {
+  background: #7c3aed;
+  color: #fff;
+}
+
+.preview-jump-button-irregular {
+  border-color: #7c3aed;
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.preview-jump-button-irregular:hover {
+  background: #ddd6fe;
 }
 
 .markdown-output {
