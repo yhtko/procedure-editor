@@ -105,9 +105,10 @@
       box.innerHTML = '<div class="empty-state">説明ブロックがありません。</div>';
       return;
     }
+    const addBlockBtn = '<div class="block-add-bottom no-print"><button type="button" data-action="add-block">ブロック追加</button></div>';
     box.innerHTML = step.blocks.map(function (block, index) {
       return blockCard(step, block, index);
-    }).join("");
+    }).join("") + addBlockBtn;
   }
 
   function blockCard(step, block, index) {
@@ -118,7 +119,7 @@
 
     return [
       '<article class="block' + active + '" data-block-id="' + utils.escapeAttribute(block.id) + '">',
-      '<div class="block-head">',
+      '<div class="block-head' + (step.type === "error" ? " block-head-error" : "") + '">',
       '<strong>ブロック ' + (index + 1) + '</strong>',
       '<div class="block-tools no-print">',
       '<button type="button" class="small secondary" data-action="move-block" data-block-id="' + utils.escapeAttribute(block.id) + '" data-dir="-1">上へ</button>',
