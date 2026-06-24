@@ -959,8 +959,24 @@ body.annotation-modal-open {
 }
 
 .preview-block h4 {
-  margin: 0 0 8px;
-  font-size: 15px;
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.preview-block h4::before {
+  content: "▶ ";
+  color: var(--primary);
+  font-size: 0.82em;
+}
+
+.preview-block-image {
+  margin-left: 1.5rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid #e2e8f0;
+  margin-top: 10px;
+  display: inline-block;
+  max-width: calc(100% - 1.5rem);
 }
 
 .badge-error {
