@@ -951,6 +951,14 @@ body.annotation-modal-open {
   padding-top: 14px;
   border-top: 3px solid #1e293b;
   page-break-inside: avoid;
+  scroll-margin-top: 90px;
+}
+
+.preview-step > h3 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
 }
 
 .preview-block {

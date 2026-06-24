@@ -319,7 +319,6 @@
       html += '<div class="preview-block">';
       html += '<h4>' + stepNum + '.' + (blockIndex + 1) + ' ' + utils.escapeHtml(block.title || "") + '</h4>';
       if (block.text) html += '<p>' + utils.textToHtml(block.text) + '</p>';
-      if (block.image) html += '<div class="preview-block-image">' + ns.annotations.imageMarkup(block, "preview") + '</div>';
       if ((block.jumps || []).length) {
         html += '<div class="preview-jump-row">';
         block.jumps.forEach(function (jump) {
@@ -331,6 +330,7 @@
         });
         html += '</div>';
       }
+      if (block.image) html += '<div class="preview-block-image">' + ns.annotations.imageMarkup(block, "preview") + '</div>';
       html += '</div>';
     });
     html += '</section>';
