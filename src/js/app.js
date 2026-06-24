@@ -101,6 +101,9 @@
           state.store.currentBlockId = actionNode.dataset.blockId;
           ns.annotations.deleteSelectedAnnotation();
           return;
+        case "set-annotation-mode":
+          ns.annotations.setAnnotationMode(actionNode.dataset.mode);
+          return;
         case "add-block-jump": {
           const card = actionNode.closest("article");
           const select = card && card.querySelector("[data-jump-step-select]");
@@ -133,6 +136,11 @@
   }
 
   function handleInput(event) {
+    if (event.target.dataset.annotationResize !== undefined) {
+      ns.annotations.resizeSelectedAnnotation(event.target.dataset.blockId, Number(event.target.value));
+      return;
+    }
+
     const coverField = event.target.dataset.coverField;
     if (coverField) {
       state.store.project.cover[coverField] = event.target.value;
@@ -253,6 +261,9 @@
   }
 
   function handleKeyDown(event) {
+    if (event.key === "Delete" || event.key === "Backspace") {
+      if (ns.annotations.handleDeleteKey()) { event.preventDefault(); return; }
+    }
     if (event.key === "Escape") {
       if (ns.annotations.handleEscape()) return;
       ns.annotations.closeAnnotationModal();

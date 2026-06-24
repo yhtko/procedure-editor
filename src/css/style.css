@@ -688,10 +688,91 @@ body.annotation-modal-open {
   background: var(--surface-soft);
 }
 
+.annotation-tool-button {
+  min-height: 30px;
+  padding: 5px 10px;
+  font-size: 13px;
+  background: #e9eef6;
+  color: var(--text);
+  border-radius: 5px;
+}
+
+.annotation-tool-button:hover {
+  background: #dfe6f1;
+}
+
 .annotation-tool-button.active {
   border-color: #2563eb;
   background: #2563eb;
   color: #fff;
+}
+
+.anno-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.anno-mode-btn {
+  min-height: 30px;
+  padding: 5px 11px;
+  font-size: 13px;
+  border-radius: 0;
+  background: #e9eef6;
+  color: var(--text);
+  border: 0;
+}
+
+.anno-mode-btn:hover {
+  background: #dfe6f1;
+}
+
+.anno-mode-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.anno-mode-btn.active:hover {
+  background: var(--primary-dark);
+}
+
+.anno-toolbar-sep {
+  display: inline-block;
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.anno-size-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.anno-size-control input[type="range"] {
+  width: 80px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--primary);
+}
+
+.annotation-modal-toolbar kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .annotation-color-picker {
@@ -699,7 +780,6 @@ body.annotation-modal-open {
   align-items: center;
   gap: 6px;
   padding: 4px 8px;
-  border-left: 1px solid var(--border);
 }
 
 .annotation-color-button {
