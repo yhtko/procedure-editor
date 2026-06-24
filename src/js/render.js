@@ -38,13 +38,16 @@
     function stepItemHtml(step, badgeText, badgeClass, extraClass) {
       const active = step.id === state.store.currentStepId ? " active" : "";
       return [
-        '<button type="button" class="step-item' + extraClass + active + '" data-action="select-step" data-step-id="' + utils.escapeAttribute(step.id) + '">',
+        '<div class="step-item' + extraClass + active + '">',
+        '<button type="button" class="step-item-body" data-action="select-step" data-step-id="' + utils.escapeAttribute(step.id) + '">',
         '<span class="step-line">',
         '<span class="' + badgeClass + '">' + badgeText + '</span>',
         '<span class="step-title">' + utils.escapeHtml(step.title || "無題") + '</span>',
         '</span>',
         '<span class="step-meta">' + utils.escapeHtml(step.screen || "画面名なし") + " / ブロック " + (step.blocks || []).length + "件</span>",
-        '</button>'
+        '</button>',
+        '<button type="button" class="step-item-delete no-print" data-action="delete-step" data-step-id="' + utils.escapeAttribute(step.id) + '" title="このSTEPを削除">×</button>',
+        '</div>'
       ].join("");
     }
 

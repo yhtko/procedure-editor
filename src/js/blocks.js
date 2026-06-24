@@ -22,10 +22,10 @@
     utils.toast("STEPを追加しました。");
   }
 
-  function deleteCurrentStep() {
-    const found = state.findStepById(state.store.currentStepId);
+  function deleteStep(stepId) {
+    const found = state.findStepById(stepId || state.store.currentStepId);
     if (!found) return;
-    if (!confirm("現在のSTEPを削除しますか？")) return;
+    if (!confirm("このSTEPを削除しますか？")) return;
     state.store.project.steps.splice(found.stepIndex, 1);
     const next = state.store.project.steps[Math.max(0, found.stepIndex - 1)] || state.store.project.steps[0] || null;
     state.store.currentStepId = next ? next.id : null;
@@ -34,6 +34,10 @@
     state.markDirty();
     ns.render.renderAll();
     utils.toast("STEPを削除しました。");
+  }
+
+  function deleteCurrentStep() {
+    deleteStep(state.store.currentStepId);
   }
 
   function moveCurrentStep(offset) {
@@ -358,6 +362,7 @@
 
   ns.blocks = {
     addStep,
+    deleteStep,
     deleteCurrentStep,
     moveCurrentStep,
     updateCurrentStepField,

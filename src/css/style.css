@@ -294,8 +294,47 @@ textarea {
 }
 
 .step-item {
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+}
+
+.step-item-body {
+  flex: 1 1 auto;
+  min-width: 0;
   display: block;
   padding: 10px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  border-radius: 6px 0 0 6px;
+}
+
+.step-item-delete {
+  flex: 0 0 auto;
+  min-height: unset;
+  width: 30px;
+  padding: 0;
+  border-radius: 0 6px 6px 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+  border-left: 1px solid var(--border);
+  opacity: 0;
+  transition: opacity 0.1s, background 0.1s, color 0.1s;
+}
+
+.step-item:hover .step-item-delete,
+.step-item.active .step-item-delete {
+  opacity: 1;
+}
+
+.step-item-delete:hover {
+  background: var(--danger);
+  color: #fff;
+  border-left-color: var(--danger);
 }
 
 .step-item:hover,
@@ -304,6 +343,11 @@ textarea {
 .sort-item.drag-over {
   border-color: var(--primary);
   background: #eef4ff;
+}
+
+.step-item:hover .step-item-body,
+.step-item.active .step-item-body {
+  background: transparent;
 }
 
 .step-line,

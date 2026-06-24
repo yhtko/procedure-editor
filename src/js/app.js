@@ -61,7 +61,7 @@
           ns.blocks.addStep();
           return;
         case "delete-step":
-          ns.blocks.deleteCurrentStep();
+          ns.blocks.deleteStep(actionNode.dataset.stepId || state.store.currentStepId);
           return;
         case "move-step":
           ns.blocks.moveCurrentStep(Number(actionNode.dataset.dir));
