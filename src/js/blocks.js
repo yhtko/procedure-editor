@@ -268,6 +268,68 @@
     await setBlockImageFromFile(block.id, file);
   }
 
+  function toggleStepType() {
+    const found = state.findStepById(state.store.currentStepId);
+    if (!found) return;
+    const step = found.step;
+    const wasError = step.type === "error";
+    step.type = wasError ? "normal" : "error";
+
+    if (!wasError) {
+      state.store.project.steps.splice(found.stepIndex, 1);
+      state.store.project.steps.push(step);
+    }
+
+    state.markDirty();
+    ns.render.renderAll();
+    utils.toast(wasError ? "通常STEPに変更しました。" : "エラー対応STEPに変更しました。末尾に移動しました。");
+  }
+
+  function addJumpToBlock(blockId, targetStepId) {
+    const found = state.findBlockById(blockId);
+    const target = state.findStepById(targetStepId);
+    if (!found || !target || target.step.type !== "error") return;
+
+    const exists = (found.block.jumps || []).some(function (j) {
+      return j.targetStepId === targetStepId;
+    });
+    if (exists) {
+      utils.toast("このエラー対応STEPへのジャンプはすでに追加されています。");
+      return;
+    }
+
+    found.block.jumps = found.block.jumps || [];
+    const jump = state.createJump(targetStepId, target.step.title || "");
+    found.block.jumps.push(jump);
+
+    state.store.currentStepId = found.step.id;
+    state.store.currentBlockId = found.block.id;
+    state.markDirty();
+    ns.render.renderEditor();
+    ns.render.renderPreview();
+    ns.render.renderMarkdown();
+    ns.render.updateDirtyIndicator();
+    utils.toast("ジャンプを追加しました。");
+  }
+
+  function removeJumpFromBlock(blockId, jumpId) {
+    const found = state.findBlockById(blockId);
+    if (!found) return;
+    const before = (found.block.jumps || []).length;
+    found.block.jumps = (found.block.jumps || []).filter(function (j) {
+      return j.id !== jumpId;
+    });
+    if (found.block.jumps.length === before) return;
+
+    state.store.currentStepId = found.step.id;
+    state.store.currentBlockId = found.block.id;
+    state.markDirty();
+    ns.render.renderEditor();
+    ns.render.renderPreview();
+    ns.render.renderMarkdown();
+    ns.render.updateDirtyIndicator();
+  }
+
   function renderAfterStructureChange() {
     ns.render.renderEditor();
     ns.render.renderStepList();
@@ -292,6 +354,9 @@
     moveBlockToStep,
     reorderBlock,
     ensureEditableBlock,
-    pasteImage
+    pasteImage,
+    toggleStepType,
+    addJumpToBlock,
+    removeJumpFromBlock
   };
 })(window.ProcedureEditor = window.ProcedureEditor || {});

@@ -14,32 +14,61 @@
 
   function buildViewerHtml(project) {
     const cover = project.cover;
-    const toc = project.steps.map(function (step, index) {
-      const id = "step-" + (index + 1);
-      return '<li><a href="#' + id + '">STEP ' + (index + 1) + ' ' + utils.escapeHtml(step.title || "") + "</a></li>";
-    }).join("");
+    const allSteps = project.steps;
+    const normalSteps = allSteps.filter(function (s) { return s.type !== "error"; });
+    const errorSteps = allSteps.filter(function (s) { return s.type === "error"; });
 
-    const steps = project.steps.map(function (step, stepIndex) {
+    const errorNums = {};
+    errorSteps.forEach(function (s, i) { errorNums[s.id] = i + 1; });
+
+    const normalToc = normalSteps.map(function (step, i) {
+      return '<li><a href="#step-' + utils.escapeAttribute(step.id) + '">STEP ' + (i + 1) + " " + utils.escapeHtml(step.title || "") + "</a></li>";
+    }).join("");
+    const errorToc = errorSteps.length
+      ? '<li class="toc-error-label">エラー対応手順</li>' + errorSteps.map(function (step, i) {
+          return '<li><a href="#step-' + utils.escapeAttribute(step.id) + '">エラー対応 ' + (i + 1) + " " + utils.escapeHtml(step.title || "") + "</a></li>";
+        }).join("")
+      : "";
+    const toc = normalToc + errorToc;
+
+    function buildStep(step, label, stepNum, isError) {
       const blocks = (step.blocks || []).map(function (block, blockIndex) {
+        const jumpsHtml = (block.jumps || []).length
+          ? '<div class="viewer-jump-row">' + block.jumps.map(function (jump) {
+              const num = errorNums[jump.targetStepId] || "?";
+              return '<a href="#step-' + utils.escapeAttribute(jump.targetStepId) + '" class="viewer-jump-button">⚠ エラー対応 ' + num + ': ' + utils.escapeHtml(jump.label || "") + '</a>';
+            }).join("") + '</div>'
+          : "";
         return [
           '<article class="viewer-block">',
-          '<h4>' + (stepIndex + 1) + "." + (blockIndex + 1) + " " + utils.escapeHtml(block.title || "") + "</h4>",
+          '<h4>' + stepNum + "." + (blockIndex + 1) + " " + utils.escapeHtml(block.title || "") + "</h4>",
           block.text ? '<p>' + utils.textToHtml(block.text) + "</p>" : "",
           block.image ? viewerImageMarkup(block) : "",
+          jumpsHtml,
           "</article>"
         ].join("");
       }).join("");
 
       return [
-        '<section id="step-' + (stepIndex + 1) + '" class="viewer-step">',
-        '<h3>STEP ' + (stepIndex + 1) + " " + utils.escapeHtml(step.title || "") + "</h3>",
+        '<section id="step-' + utils.escapeAttribute(step.id) + '" class="viewer-step' + (isError ? " viewer-step-error" : "") + '">',
+        '<h3>' + label + " " + utils.escapeHtml(step.title || "") + "</h3>",
         step.screen ? '<p><strong>画面名:</strong> ' + utils.escapeHtml(step.screen) + "</p>" : "",
         step.summary ? '<p>' + utils.textToHtml(step.summary) + "</p>" : "",
         step.check ? '<aside class="viewer-callout viewer-callout-warning"><h4>注意・確認ポイント</h4><p>' + utils.textToHtml(step.check) + "</p></aside>" : "",
         blocks,
         "</section>"
       ].join("");
+    }
+
+    const normalHtml = normalSteps.map(function (step, i) {
+      return buildStep(step, "STEP " + (i + 1), i + 1, false);
     }).join("");
+    const errorSectionHtml = errorSteps.length
+      ? '<div class="viewer-error-section"><h2>エラー対応手順</h2>' + errorSteps.map(function (step, i) {
+          return buildStep(step, "エラー対応 " + (i + 1), "E" + (i + 1), true);
+        }).join("") + "</div>"
+      : "";
+    const steps = normalHtml + errorSectionHtml;
 
     const coverRows = ns.exporter.coverRows(cover).map(function (row) {
       return '<tr><th>' + utils.escapeHtml(row[0]) + '</th><td>' + utils.textToHtml(row[1] || "") + "</td></tr>";
@@ -133,7 +162,11 @@
       ".content{border:1px solid #d7dee8;border-radius:8px;background:#fff;padding:28px;box-shadow:0 10px 24px rgba(15,23,42,.08)}",
       ".cover table{width:100%;border-collapse:collapse}.cover th,.cover td{border:1px solid #cbd5e1;padding:9px;text-align:left;vertical-align:top}.cover th{width:28%;background:#f1f5f9}",
       ".viewer-callout{margin:18px 0;padding:13px 15px;border:1px solid #f6d88a;border-left:5px solid #d97706;border-radius:8px;background:#fffbeb}.viewer-callout h2,.viewer-callout h4{margin:0 0 7px;color:#7c2d12;font-size:16px}.viewer-callout p{margin:0}",
-      ".viewer-step{margin-top:30px;padding-top:16px;border-top:3px solid #1e293b}.viewer-block{margin:18px 0 24px}.viewer-block h4{margin:0 0 8px}",
+      ".viewer-step{margin-top:30px;padding-top:16px;border-top:3px solid #1e293b}.viewer-step-error{border-top-color:#d97706}.viewer-block{margin:18px 0 24px}.viewer-block h4{margin:0 0 8px}",
+      ".viewer-error-section{margin-top:48px;padding-top:20px;border-top:3px solid #d97706}.viewer-error-section h2{color:#92400e;font-size:20px;margin:0 0 12px}",
+      ".viewer-jump-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}",
+      ".viewer-jump-button{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;border:1.5px solid #d97706;background:#fffbeb;color:#92400e;font:inherit;font-size:13px;font-weight:700;text-decoration:none;cursor:pointer}.viewer-jump-button:hover{background:#fef3c7}",
+      ".toc-error-label{margin:10px 0 4px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:#92400e;list-style:none;padding-left:0}",
       ".viewer-image-frame{display:inline-block;max-width:100%;margin:10px 0 0;cursor:zoom-in}.viewer-image-frame figcaption{margin-top:4px;color:#667085;font-size:12px}.annotated-image{position:relative;display:inline-block;line-height:0;max-width:100%}.annotated-image img{display:block;max-width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff}",
       ".annotation{position:absolute;min-width:14px;min-height:14px;color:#ef4444;line-height:1}.annotation-circle,.annotation-number{min-width:0;min-height:0;height:auto;aspect-ratio:1/1;border-radius:50%}.annotation-circle{border:3px solid currentColor;background:transparent}.annotation-marker{border:3px solid currentColor;background:color-mix(in srgb,currentColor 18%,transparent);border-radius:0}.annotation-number{display:flex;align-items:center;justify-content:center;border:2px solid #fff;background:currentColor;box-shadow:0 1px 7px rgba(15,23,42,.32)}.annotation-number span{color:#fff;font-weight:700;font-size:clamp(12px,2.6vw,30px);line-height:1}.annotation-arrow{overflow:visible}.annotation-arrow svg{display:block;width:100%;height:100%;overflow:visible}.annotation-arrow line{stroke-width:3;stroke-linecap:round;vector-effect:non-scaling-stroke}",
       ".image-modal{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;padding:40px;background:rgba(15,23,42,.78)}.image-modal.open{display:flex}.modal-body{max-width:96vw;max-height:92vh;overflow:auto}.modal-body .viewer-image-frame{cursor:default}.modal-body img{max-width:92vw;max-height:86vh}.modal-close{position:absolute;right:18px;top:14px;border:0;border-radius:6px;background:#fff;color:#172033;font-size:28px;line-height:1;padding:4px 11px;cursor:pointer}",

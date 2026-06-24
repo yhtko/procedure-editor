@@ -100,6 +100,23 @@
           state.store.currentBlockId = actionNode.dataset.blockId;
           ns.annotations.deleteSelectedAnnotation();
           return;
+        case "toggle-step-type":
+          ns.blocks.toggleStepType();
+          return;
+        case "add-block-jump": {
+          const card = actionNode.closest("[data-block-id]");
+          const select = card && card.querySelector("[data-jump-step-select]");
+          const targetStepId = select && select.value;
+          if (targetStepId) {
+            ns.blocks.addJumpToBlock(actionNode.dataset.blockId, targetStepId);
+          } else {
+            utils.toast("ジャンプ先のエラー対応STEPを選択してください。");
+          }
+          return;
+        }
+        case "delete-block-jump":
+          ns.blocks.removeJumpFromBlock(actionNode.dataset.blockId, actionNode.dataset.jumpId);
+          return;
         default:
           break;
       }

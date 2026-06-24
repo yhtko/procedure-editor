@@ -21,6 +21,7 @@
   const STEP_FIELDS = ["title", "screen", "summary", "check"];
   const BLOCK_FIELDS = ["title", "text", "image", "imageName"];
   const ANNOTATION_TYPES = ["circle", "arrow", "number", "marker"];
+  const STEP_TYPES = ["normal", "error"];
 
   const store = {
     project: createProject(),
@@ -62,6 +63,7 @@
     const stepNumber = index || store.project.steps.length + 1;
     return {
       id: utils.uid("step"),
+      type: "normal",
       title: "新しいSTEP " + stepNumber,
       screen: "",
       summary: "",
@@ -77,7 +79,16 @@
       text: "",
       image: "",
       imageName: "",
-      annotations: []
+      annotations: [],
+      jumps: []
+    };
+  }
+
+  function createJump(targetStepId, label) {
+    return {
+      id: utils.uid("jump"),
+      targetStepId: targetStepId,
+      label: String(label || "")
     };
   }
 
@@ -116,6 +127,7 @@
   function normalizeStep(step, index) {
     const normalized = {
       id: step.id || utils.uid("step"),
+      type: STEP_TYPES.includes(step.type) ? step.type : "normal",
       title: "",
       screen: "",
       summary: "",
@@ -137,7 +149,8 @@
       text: "",
       image: "",
       imageName: "",
-      annotations: []
+      annotations: [],
+      jumps: []
     };
     BLOCK_FIELDS.forEach(function (field) {
       if (block[field] != null) normalized[field] = String(block[field]);
@@ -146,7 +159,19 @@
     normalized.annotations = Array.isArray(block.annotations)
       ? block.annotations.map(normalizeAnnotation).filter(Boolean)
       : [];
+    normalized.jumps = Array.isArray(block.jumps)
+      ? block.jumps.map(normalizeJump).filter(Boolean)
+      : [];
     return normalized;
+  }
+
+  function normalizeJump(jump) {
+    if (!jump || typeof jump !== "object" || !jump.targetStepId) return null;
+    return {
+      id: jump.id || utils.uid("jump"),
+      targetStepId: String(jump.targetStepId),
+      label: String(jump.label || "")
+    };
   }
 
   function normalizeAnnotation(annotation, index) {
@@ -253,11 +278,13 @@
     STEP_FIELDS,
     BLOCK_FIELDS,
     ANNOTATION_TYPES,
+    STEP_TYPES,
     store,
     defaultCover,
     createProject,
     createStep,
     createBlock,
+    createJump,
     createAnnotation,
     normalizeProject,
     setProject,
