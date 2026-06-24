@@ -80,9 +80,8 @@
     const found = state.findBlockById(blockId || state.store.currentBlockId);
     if (!found || !state.store.selectedAnnotationId) return;
     const annotation = state.findAnnotation(found.block, state.store.selectedAnnotationId);
-    if (!annotation || annotation.type === "arrow" || annotation.type === "number") return;
-    if (annotation.type === "circle") { annotation.w = value; annotation.h = value; }
-    else if (annotation.type === "marker") { annotation.h = value; }
+    if (!annotation || annotation.type !== "circle") return;
+    annotation.w = value; annotation.h = value;
     state.markDirty();
     const el = document.querySelector('.annotation-canvas [data-annotation-id="' + annotation.id + '"]');
     if (el) el.setAttribute("style", positionStyle(annotation));
@@ -186,11 +185,10 @@
 
   function annotationSizeControl(block) {
     const selected = state.findAnnotation(block, state.store.selectedAnnotationId);
-    if (!selected || selected.type === "arrow" || selected.type === "number") return "";
-    const isMarker = selected.type === "marker";
-    const value = isMarker ? (Number(selected.h) || 4) : (Number(selected.w) || 10);
-    const max   = isMarker ? "20" : "30";
-    const label = isMarker ? "高さ" : "サイズ";
+    if (!selected || selected.type !== "circle") return "";
+    const value = Number(selected.w) || 10;
+    const max   = "30";
+    const label = "サイズ";
     return [
       '<label class="anno-size-control">',
       '<span>' + label + '</span>',
@@ -499,7 +497,7 @@
         annotation.w  = size; annotation.h = size;
       } else if (annotation.type === "marker") {
         annotation.w = utils.clamp(dragState.original.w + dx, 1, 100 - dragState.original.x);
-        annotation.h = dragState.original.h || 4; // width-only via handle; height via slider
+        annotation.h = utils.clamp(dragState.original.h + dy, 1, 100 - dragState.original.y);
       } else {
         annotation.w = utils.clamp(dragState.original.w + dx, 4, 100 - dragState.original.x);
         annotation.h = utils.clamp(dragState.original.h + dy, 4, 100 - dragState.original.y);
