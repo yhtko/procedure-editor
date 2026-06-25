@@ -103,6 +103,16 @@ select {
   font: inherit;
 }
 
+input[type="checkbox"],
+input[type="radio"] {
+  width: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
 textarea {
   min-height: 88px;
   resize: vertical;
