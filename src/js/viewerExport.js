@@ -8,8 +8,10 @@
     const project = state.store.project;
     const baseName = utils.sanitizeFileName(project.cover.title, "手順書");
     const html = buildViewerHtml(project);
-    utils.downloadText(baseName + "_viewer_" + utils.timestamp() + ".html", html, "text/html;charset=utf-8");
-    utils.toast("閲覧用HTMLを出力しました。");
+    utils.downloadText(baseName + "_" + utils.timestamp() + ".html", html, "text/html;charset=utf-8");
+    state.markClean();
+    ns.render.updateDirtyIndicator();
+    utils.toast("HTMLを保存しました。");
   }
 
   function buildViewerHtml(project) {

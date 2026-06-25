@@ -43,9 +43,6 @@
         case "new-project":
           newProject();
           return;
-        case "export-json":
-          ns.exporter.exportJson();
-          return;
         case "download-markdown":
           ns.exporter.downloadMarkdown();
           return;
@@ -164,11 +161,6 @@
   }
 
   function handleChange(event) {
-    if (event.target.id === "jsonFileInput") {
-      importJson(event.target.files[0], event.target);
-      return;
-    }
-
     if (event.target.id === "htmlFileInput") {
       importHtml(event.target.files[0], event.target);
       return;
@@ -287,16 +279,6 @@
     state.store.activeTab = "cover";
     ns.render.renderAll();
     utils.toast("新規手順書を作成しました。");
-  }
-
-  async function importJson(file, input) {
-    if (!file) return;
-    if (state.store.dirty && !confirm("未保存の変更があります。JSONを読み込みますか？")) {
-      input.value = "";
-      return;
-    }
-    await ns.exporter.importJsonFile(file);
-    input.value = "";
   }
 
   async function importHtml(file, input) {
