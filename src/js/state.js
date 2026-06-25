@@ -92,6 +92,14 @@
     };
   }
 
+  function createExternalJump(url, label) {
+    return {
+      id: utils.uid("jump"),
+      url: String(url || ""),
+      label: String(label || "")
+    };
+  }
+
   function createAnnotation(type, label) {
     const safeType = ANNOTATION_TYPES.includes(type) ? type : "circle";
     const isNumber = safeType === "number";
@@ -166,7 +174,15 @@
   }
 
   function normalizeJump(jump) {
-    if (!jump || typeof jump !== "object" || !jump.targetStepId) return null;
+    if (!jump || typeof jump !== "object") return null;
+    if (jump.url) {
+      return {
+        id: jump.id || utils.uid("jump"),
+        url: String(jump.url),
+        label: String(jump.label || "")
+      };
+    }
+    if (!jump.targetStepId) return null;
     return {
       id: jump.id || utils.uid("jump"),
       targetStepId: String(jump.targetStepId),
@@ -285,6 +301,7 @@
     createStep,
     createBlock,
     createJump,
+    createExternalJump,
     createAnnotation,
     normalizeProject,
     setProject,

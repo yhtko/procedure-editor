@@ -112,6 +112,16 @@
           }
           return;
         }
+        case "add-external-jump": {
+          const card = actionNode.closest("article");
+          const urlInput = card && card.querySelector("[data-external-jump-url]");
+          const labelInput = card && card.querySelector("[data-external-jump-label]");
+          const url = urlInput && urlInput.value.trim();
+          const label = labelInput && labelInput.value.trim();
+          if (!url) { utils.toast("URLを入力してください。"); return; }
+          ns.blocks.addExternalJumpToBlock(actionNode.dataset.blockId, url, label);
+          return;
+        }
         case "delete-block-jump":
           ns.blocks.removeJumpFromBlock(actionNode.dataset.blockId, actionNode.dataset.jumpId);
           return;

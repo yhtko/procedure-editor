@@ -157,7 +157,7 @@
   function blockJumpSection(block) {
     const nonNormalSteps = state.store.project.steps.filter(function (s) { return s.type !== "normal"; });
     const jumps = block.jumps || [];
-    const jumpedIds = jumps.map(function (j) { return j.targetStepId; });
+    const internalJumpedIds = jumps.filter(function (j) { return j.targetStepId; }).map(function (j) { return j.targetStepId; });
 
     const stepNums = {};
     let ec = 0, ic = 0;
@@ -166,9 +166,20 @@
       else if (s.type === "irregular") { ic += 1; stepNums[s.id] = { label: "非定常 " + ic, type: "irregular" }; }
     });
 
-    const available = nonNormalSteps.filter(function (s) { return !jumpedIds.includes(s.id); });
+    const available = nonNormalSteps.filter(function (s) { return !internalJumpedIds.includes(s.id); });
 
     const jumpTags = jumps.map(function (jump) {
+      if (jump.url) {
+        return [
+          '<span class="jump-tag jump-tag-external">',
+          '<span class="jump-icon">🔗</span>',
+          ' ' + utils.escapeHtml(jump.label || jump.url),
+          '<button type="button" class="jump-tag-remove" data-action="delete-block-jump"',
+          ' data-block-id="' + utils.escapeAttribute(block.id) + '"',
+          ' data-jump-id="' + utils.escapeAttribute(jump.id) + '">×</button>',
+          '</span>'
+        ].join("");
+      }
       const info = stepNums[jump.targetStepId] || { label: "?", type: "error" };
       const isIrregular = info.type === "irregular";
       const icon = isIrregular ? "↗" : "⚠";
@@ -184,11 +195,11 @@
       ].join("");
     }).join("");
 
-    let addHtml;
+    let internalAddHtml;
     if (nonNormalSteps.length === 0) {
-      addHtml = '<span class="jump-hint">ジャンプ先のSTEPがありません</span>';
+      internalAddHtml = '<span class="jump-hint">ジャンプ先のSTEPがありません</span>';
     } else if (available.length === 0) {
-      addHtml = '<span class="jump-hint">すべてのジャンプ先STEPを追加済みです</span>';
+      internalAddHtml = '<span class="jump-hint">すべてのジャンプ先STEPを追加済みです</span>';
     } else {
       const options = ['<option value="">選択...</option>'].concat(
         available.map(function (s) {
@@ -196,17 +207,27 @@
           return '<option value="' + utils.escapeAttribute(s.id) + '">' + info.label + ': ' + utils.escapeHtml(s.title || "") + '</option>';
         })
       ).join("");
-      addHtml = [
+      internalAddHtml = [
         '<select class="jump-select" data-jump-step-select data-block-id="' + utils.escapeAttribute(block.id) + '">' + options + '</select>',
         '<button type="button" class="small secondary" data-action="add-block-jump" data-block-id="' + utils.escapeAttribute(block.id) + '">追加</button>'
       ].join("");
     }
 
+    const externalAddHtml = [
+      '<input type="url" class="jump-url-input" placeholder="https://..." data-external-jump-url data-block-id="' + utils.escapeAttribute(block.id) + '">',
+      '<input type="text" class="jump-label-input" placeholder="ラベル（任意）" data-external-jump-label data-block-id="' + utils.escapeAttribute(block.id) + '">',
+      '<button type="button" class="small secondary" data-action="add-external-jump" data-block-id="' + utils.escapeAttribute(block.id) + '">追加</button>'
+    ].join("");
+
     return [
       '<div class="block-jump-section no-print">',
       '<div class="block-jump-row">',
-      '<span class="block-jump-label">↗ ジャンプ設定</span>',
-      addHtml,
+      '<span class="block-jump-label">↗ 内部ジャンプ</span>',
+      internalAddHtml,
+      '</div>',
+      '<div class="block-jump-row">',
+      '<span class="block-jump-label">🔗 外部リンク</span>',
+      externalAddHtml,
       '</div>',
       jumps.length ? '<div class="block-jump-list">' + jumpTags + '</div>' : '',
       '</div>'
@@ -322,6 +343,10 @@
       if ((block.jumps || []).length) {
         html += '<div class="preview-jump-row">';
         block.jumps.forEach(function (jump) {
+          if (jump.url) {
+            html += '<a href="' + utils.escapeAttribute(jump.url) + '" target="_blank" rel="noopener" class="preview-jump-button preview-jump-button-external">🔗 ' + utils.escapeHtml(jump.label || jump.url) + '</a>';
+            return;
+          }
           const info = stepNums[jump.targetStepId] || { label: "?", type: "error" };
           const isIrregular = info.type === "irregular";
           const btnClass = isIrregular ? " preview-jump-button-irregular" : "";

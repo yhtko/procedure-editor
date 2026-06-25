@@ -45,6 +45,9 @@
       const blocks = (step.blocks || []).map(function (block, blockIndex) {
         const jumpsHtml = (block.jumps || []).length
           ? '<div class="viewer-jump-row">' + block.jumps.map(function (jump) {
+              if (jump.url) {
+                return '<a href="' + utils.escapeAttribute(jump.url) + '" target="_blank" rel="noopener" class="viewer-jump-button viewer-jump-button-external">🔗 ' + utils.escapeHtml(jump.label || jump.url) + '</a>';
+              }
               const info = stepNums[jump.targetStepId] || { label: "?", type: "error" };
               const isIrregular = info.type === "irregular";
               const btnClass = isIrregular ? "viewer-jump-button viewer-jump-button-irregular" : "viewer-jump-button";
@@ -65,7 +68,7 @@
       const typeClass = stepType === "error" ? " viewer-step-error" : stepType === "irregular" ? " viewer-step-irregular" : "";
       return [
         '<section id="step-' + utils.escapeAttribute(step.id) + '" class="viewer-step' + typeClass + '">',
-        '<h3>' + label + " " + utils.escapeHtml(step.title || "") + "</h3>",
+        '<h3>' + label + " " + utils.escapeHtml(step.title || "") + ' <button class="step-copy-url" data-step-id="' + utils.escapeAttribute(step.id) + '" title="このSTEPのURLをコピー">🔗</button></h3>',
         step.screen ? '<p><strong>画面名:</strong> ' + utils.escapeHtml(step.screen) + "</p>" : "",
         step.summary ? '<p>' + utils.textToHtml(step.summary) + "</p>" : "",
         step.check ? '<aside class="viewer-callout viewer-callout-warning"><h4>注意・確認ポイント</h4><p>' + utils.textToHtml(step.check) + "</p></aside>" : "",
@@ -203,6 +206,8 @@
       ".viewer-jump-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}",
       ".viewer-jump-button{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;border:1.5px solid #d97706;background:#fffbeb;color:#92400e;font:inherit;font-size:13px;font-weight:700;text-decoration:none;cursor:pointer}.viewer-jump-button:hover{background:#fef3c7}",
       ".viewer-jump-button-irregular{border-color:#7c3aed;background:#ede9fe;color:#5b21b6}.viewer-jump-button-irregular:hover{background:#ddd6fe}",
+      ".viewer-jump-button-external{border-color:#0ea5e9;background:#f0f9ff;color:#0c4a6e}.viewer-jump-button-external:hover{background:#e0f2fe}",
+      ".step-copy-url{background:transparent;border:0;cursor:pointer;padding:2px 5px;font-size:13px;opacity:0;transition:opacity .15s;vertical-align:middle}.viewer-step:hover .step-copy-url,.step-copy-url:focus{opacity:1}",
       ".toc-section-label{margin:10px 0 4px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;list-style:none;padding-left:0}",
       ".toc-error-label{color:#92400e}.toc-irregular-label{color:#5b21b6}",
       ".viewer-image-frame{display:inline-block;max-width:100%;margin:10px 0 0;cursor:zoom-in}.viewer-image-frame figcaption{margin-top:4px;color:#667085;font-size:12px}.annotated-image{position:relative;display:inline-block;line-height:0;max-width:100%}.annotated-image img{display:block;max-width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff}",
@@ -304,6 +309,7 @@
       "function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');body.innerHTML='';}",
       "document.addEventListener('click',function(e){var frame=e.target.closest('.viewer-image-frame');if(frame&&frame.closest('.content'))openModal(frame);if(e.target===modal||e.target.closest('.modal-close'))closeModal();});",
       "document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('viewer-image-frame')){e.preventDefault();openModal(e.target);}});",
+      "document.querySelectorAll('.step-copy-url').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();var url=location.href.split('#')[0]+'#step-'+btn.dataset.stepId;var orig=btn.textContent;if(navigator.clipboard){navigator.clipboard.writeText(url).then(function(){btn.textContent='✓';setTimeout(function(){btn.textContent=orig;},1500);});}else{prompt('URLをコピー:',url);}});});",
       "var backFloat=document.getElementById('viewerBackFloat');var jumpReturn=null;",
       "document.addEventListener('click',function(e){",
       "if(backFloat&&(e.target===backFloat||backFloat.contains(e.target))){jumpReturn=null;backFloat.style.display='none';return;}",
