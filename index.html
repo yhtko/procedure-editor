@@ -20,6 +20,10 @@
           HTML読込
           <input id="htmlFileInput" type="file" accept="text/html,.html" />
         </label>
+        <label class="button secondary file-button">
+          STEP追加
+          <input id="stepImportFileInput" type="file" accept="text/html,.html" />
+        </label>
         <button type="button" class="secondary" data-action="download-markdown">Markdown保存</button>
         <button type="button" class="secondary" data-action="export-viewer">HTML保存</button>
         <button type="button" data-action="print">PDF/印刷</button>
@@ -170,6 +174,26 @@
   </main>
 
   <div id="toast" class="toast" aria-live="polite"></div>
+
+  <div id="stepImportModal" class="step-import-modal" hidden>
+    <div class="step-import-backdrop" data-action="cancel-step-import"></div>
+    <div class="step-import-panel">
+      <div class="step-import-head">
+        <h2>STEPをインポート</h2>
+        <p>追加するSTEPを選択してください。</p>
+      </div>
+      <div class="step-import-body">
+        <label class="step-import-all-row">
+          <input type="checkbox" id="stepImportSelectAll" checked> 全選択
+        </label>
+        <ul id="stepImportList" class="step-import-list"></ul>
+      </div>
+      <div class="step-import-foot">
+        <button type="button" data-action="confirm-step-import">追加する</button>
+        <button type="button" class="secondary" data-action="cancel-step-import">キャンセル</button>
+      </div>
+    </div>
+  </div>
 
   <script src="src/js/utils.js" defer></script>
   <script src="src/js/state.js" defer></script>

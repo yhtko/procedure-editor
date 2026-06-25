@@ -52,6 +52,12 @@
         case "export-viewer":
           ns.viewerExport.exportViewerHtml();
           return;
+        case "confirm-step-import":
+          ns.exporter.confirmStepImport();
+          return;
+        case "cancel-step-import":
+          ns.exporter.cancelStepImport();
+          return;
         case "print":
           ns.exporter.printDocument();
           return;
@@ -174,6 +180,12 @@
   function handleChange(event) {
     if (event.target.id === "htmlFileInput") {
       importHtml(event.target.files[0], event.target);
+      return;
+    }
+
+    if (event.target.id === "stepImportFileInput") {
+      ns.exporter.openStepImportModal(event.target.files[0]);
+      event.target.value = "";
       return;
     }
 

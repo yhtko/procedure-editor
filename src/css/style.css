@@ -1474,3 +1474,102 @@ body.annotation-modal-open {
     color: inherit;
   }
 }
+
+/* ── STEP Import Modal ─────────────────────────────── */
+.step-import-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-import-modal[hidden] {
+  display: none;
+}
+
+.step-import-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  cursor: pointer;
+}
+
+.step-import-panel {
+  position: relative;
+  z-index: 1;
+  background: var(--surface);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  width: min(560px, 94vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.step-import-head {
+  padding: 20px 24px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.step-import-head h2 {
+  margin: 0 0 2px;
+  font-size: 18px;
+}
+
+.step-import-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.step-import-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 12px 24px;
+}
+
+.step-import-all-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  font-weight: 600;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.step-import-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.step-import-list li label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.step-import-list li label:hover {
+  background: var(--surface-soft);
+}
+
+.step-import-foot {
+  padding: 12px 24px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
