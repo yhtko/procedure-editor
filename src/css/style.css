@@ -1502,44 +1502,46 @@ body.annotation-modal-open {
   background: var(--surface);
   border-radius: 12px;
   box-shadow: var(--shadow);
-  width: min(560px, 94vw);
-  max-height: 80vh;
+  width: min(480px, 94vw);
+  max-height: 72vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
 .step-import-head {
-  padding: 20px 24px 12px;
+  flex-shrink: 0;
+  padding: 16px 20px 10px;
   border-bottom: 1px solid var(--border);
 }
 
 .step-import-head h2 {
   margin: 0 0 2px;
-  font-size: 18px;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .step-import-head p {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .step-import-body {
   flex: 1 1 auto;
   overflow-y: auto;
-  padding: 12px 24px;
+  padding: 8px 16px;
 }
 
 .step-import-all-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 0;
+  gap: 6px;
+  padding: 5px 2px;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   cursor: pointer;
 }
 
@@ -1547,29 +1549,58 @@ body.annotation-modal-open {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+}
+
+.step-import-list li {
+  border-radius: 5px;
+}
+
+.step-import-list li:hover {
+  background: var(--surface-soft);
 }
 
 .step-import-list li label {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 4px;
-  border-radius: 6px;
+  padding: 4px 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.4;
+  width: 100%;
 }
 
-.step-import-list li label:hover {
-  background: var(--surface-soft);
+.step-import-list .badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  min-width: 38px;
+  flex-shrink: 0;
 }
 
 .step-import-foot {
-  padding: 12px 24px 20px;
+  flex-shrink: 0;
+  padding: 10px 20px 14px;
   border-top: 1px solid var(--border);
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.step-import-foot .replace-btn {
+  margin-right: auto;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+  padding: 4px 10px;
+  min-height: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.step-import-foot .replace-btn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: none;
 }

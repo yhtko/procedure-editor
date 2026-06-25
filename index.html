@@ -20,10 +20,6 @@
           HTML読込
           <input id="htmlFileInput" type="file" accept="text/html,.html" />
         </label>
-        <label class="button secondary file-button">
-          STEP追加
-          <input id="stepImportFileInput" type="file" accept="text/html,.html" />
-        </label>
         <button type="button" class="secondary" data-action="download-markdown">Markdown保存</button>
         <button type="button" class="secondary" data-action="export-viewer">HTML保存</button>
         <button type="button" data-action="print">PDF/印刷</button>
@@ -189,8 +185,9 @@
         <ul id="stepImportList" class="step-import-list"></ul>
       </div>
       <div class="step-import-foot">
-        <button type="button" data-action="confirm-step-import">追加する</button>
+        <button type="button" class="replace-btn" data-action="replace-all-import">全て置き換える</button>
         <button type="button" class="secondary" data-action="cancel-step-import">キャンセル</button>
+        <button type="button" data-action="confirm-step-import">選択STEPを追加</button>
       </div>
     </div>
   </div>

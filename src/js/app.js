@@ -55,6 +55,9 @@
         case "confirm-step-import":
           ns.exporter.confirmStepImport();
           return;
+        case "replace-all-import":
+          ns.exporter.replaceAllImport();
+          return;
         case "cancel-step-import":
           ns.exporter.cancelStepImport();
           return;
@@ -179,11 +182,6 @@
 
   function handleChange(event) {
     if (event.target.id === "htmlFileInput") {
-      importHtml(event.target.files[0], event.target);
-      return;
-    }
-
-    if (event.target.id === "stepImportFileInput") {
       ns.exporter.openStepImportModal(event.target.files[0]);
       event.target.value = "";
       return;
@@ -287,6 +285,7 @@
     if (event.key === "Escape") {
       if (ns.annotations.handleEscape()) return;
       ns.annotations.closeAnnotationModal();
+      ns.exporter.cancelStepImport();
     }
   }
 
@@ -302,16 +301,6 @@
     state.store.activeTab = "cover";
     ns.render.renderAll();
     utils.toast("新規手順書を作成しました。");
-  }
-
-  async function importHtml(file, input) {
-    if (!file) return;
-    if (state.store.dirty && !confirm("未保存の変更があります。HTMLを読み込みますか？")) {
-      input.value = "";
-      return;
-    }
-    await ns.exporter.importHtmlFile(file);
-    input.value = "";
   }
 
   function selectStep(stepId) {

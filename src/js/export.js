@@ -153,6 +153,7 @@
   }
 
   let pendingImportSteps = null;
+  let pendingImportData = null;
 
   async function openStepImportModal(file) {
     if (!file) return;
@@ -172,6 +173,7 @@
           block.image = imgEl ? imgEl.getAttribute("src") : null;
         });
       });
+      pendingImportData = data;
       pendingImportSteps = data.steps || [];
       if (!pendingImportSteps.length) {
         utils.toast("インポートするSTEPが見つかりませんでした。");
@@ -285,10 +287,20 @@
     utils.toast(remapped.length + " 件のSTEPを追加しました。");
   }
 
+  function replaceAllImport() {
+    if (!pendingImportData) return;
+    if (state.store.dirty && !confirm("未保存の変更があります。このHTMLで上書きしますか？")) return;
+    state.setProject(pendingImportData);
+    ns.render.renderAll();
+    cancelStepImport();
+    utils.toast("閲覧HTMLを読み込みました。");
+  }
+
   function cancelStepImport() {
     const modal = document.getElementById("stepImportModal");
     if (modal) modal.hidden = true;
     pendingImportSteps = null;
+    pendingImportData = null;
   }
 
   function printDocument() {
@@ -308,6 +320,7 @@
     importHtmlFile,
     openStepImportModal,
     confirmStepImport,
+    replaceAllImport,
     cancelStepImport,
     downloadMarkdown,
     copyMarkdown,
