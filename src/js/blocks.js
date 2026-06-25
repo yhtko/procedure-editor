@@ -348,21 +348,6 @@
     utils.toast("ジャンプを追加しました。");
   }
 
-  function addExternalJumpToBlock(blockId, url, label) {
-    const found = state.findBlockById(blockId);
-    if (!found) return;
-    found.block.jumps = found.block.jumps || [];
-    found.block.jumps.push(state.createExternalJump(url, label));
-    state.store.currentStepId = found.step.id;
-    state.store.currentBlockId = found.block.id;
-    state.markDirty();
-    ns.render.renderEditor();
-    ns.render.renderPreview();
-    ns.render.renderMarkdown();
-    ns.render.updateDirtyIndicator();
-    utils.toast("外部リンクを追加しました。");
-  }
-
   function removeJumpFromBlock(blockId, jumpId) {
     const found = state.findBlockById(blockId);
     if (!found) return;
@@ -410,7 +395,6 @@
     pasteImage,
     setStepType,
     addJumpToBlock,
-    addExternalJumpToBlock,
     removeJumpFromBlock
   };
 })(window.ProcedureEditor = window.ProcedureEditor || {});

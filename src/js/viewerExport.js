@@ -48,10 +48,7 @@
     function buildStep(step, label, stepNum, stepType) {
       const blocks = (step.blocks || []).map(function (block, blockIndex) {
         const jumpsHtml = (block.jumps || []).length
-          ? '<div class="viewer-jump-row">' + block.jumps.map(function (jump) {
-              if (jump.url) {
-                return '<a href="' + utils.escapeAttribute(jump.url) + '" target="_blank" rel="noopener" class="viewer-jump-button viewer-jump-button-external">🔗 ' + utils.escapeHtml(jump.label || jump.url) + '</a>';
-              }
+          ? '<div class="viewer-jump-row">' + block.jumps.filter(function (j) { return j.targetStepId; }).map(function (jump) {
               const info = stepNums[jump.targetStepId] || { label: "?", type: "error" };
               const isIrregular = info.type === "irregular";
               const btnClass = isIrregular ? "viewer-jump-button viewer-jump-button-irregular" : "viewer-jump-button";
@@ -210,7 +207,6 @@
       ".viewer-jump-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}",
       ".viewer-jump-button{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;border:1.5px solid #d97706;background:#fffbeb;color:#92400e;font:inherit;font-size:13px;font-weight:700;text-decoration:none;cursor:pointer}.viewer-jump-button:hover{background:#fef3c7}",
       ".viewer-jump-button-irregular{border-color:#7c3aed;background:#ede9fe;color:#5b21b6}.viewer-jump-button-irregular:hover{background:#ddd6fe}",
-      ".viewer-jump-button-external{border-color:#0ea5e9;background:#f0f9ff;color:#0c4a6e}.viewer-jump-button-external:hover{background:#e0f2fe}",
       ".step-copy-url{background:transparent;border:0;cursor:pointer;padding:2px 5px;font-size:12px;opacity:0;transition:opacity .15s;vertical-align:middle}.toc li:hover .step-copy-url,.step-copy-url:focus{opacity:1}",
       ".toc-section-label{margin:10px 0 4px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;list-style:none;padding-left:0}",
       ".toc-error-label{color:#92400e}.toc-irregular-label{color:#5b21b6}",

@@ -169,17 +169,7 @@
     const available = nonNormalSteps.filter(function (s) { return !internalJumpedIds.includes(s.id); });
 
     const jumpTags = jumps.map(function (jump) {
-      if (jump.url) {
-        return [
-          '<span class="jump-tag jump-tag-external">',
-          '<span class="jump-icon">🔗</span>',
-          '<span class="jump-tag-text">' + utils.escapeHtml(jump.label || jump.url) + '</span>',
-          '<button type="button" class="jump-tag-remove" data-action="delete-block-jump"',
-          ' data-block-id="' + utils.escapeAttribute(block.id) + '"',
-          ' data-jump-id="' + utils.escapeAttribute(jump.id) + '">×</button>',
-          '</span>'
-        ].join("");
-      }
+      if (jump.url) return "";
       const info = stepNums[jump.targetStepId] || { label: "?", type: "error" };
       const isIrregular = info.type === "irregular";
       const icon = isIrregular ? "↗" : "⚠";
@@ -213,21 +203,11 @@
       ].join("");
     }
 
-    const externalAddHtml = [
-      '<input type="url" class="jump-url-input" placeholder="https://..." data-external-jump-url data-block-id="' + utils.escapeAttribute(block.id) + '">',
-      '<input type="text" class="jump-label-input" placeholder="ラベル（必須）" data-external-jump-label data-block-id="' + utils.escapeAttribute(block.id) + '">',
-      '<button type="button" class="small secondary" data-action="add-external-jump" data-block-id="' + utils.escapeAttribute(block.id) + '">追加</button>'
-    ].join("");
-
     return [
       '<div class="block-jump-section no-print">',
       '<div class="block-jump-row">',
-      '<span class="block-jump-label">↗ 内部ジャンプ</span>',
+      '<span class="block-jump-label">↗ ジャンプ</span>',
       internalAddHtml,
-      '</div>',
-      '<div class="block-jump-row">',
-      '<span class="block-jump-label">🔗 外部リンク</span>',
-      externalAddHtml,
       '</div>',
       jumps.length ? '<div class="block-jump-list">' + jumpTags + '</div>' : '',
       '</div>'
@@ -343,10 +323,7 @@
       if ((block.jumps || []).length) {
         html += '<div class="preview-jump-row">';
         block.jumps.forEach(function (jump) {
-          if (jump.url) {
-            html += '<a href="' + utils.escapeAttribute(jump.url) + '" target="_blank" rel="noopener" class="preview-jump-button preview-jump-button-external">🔗 ' + utils.escapeHtml(jump.label || jump.url) + '</a>';
-            return;
-          }
+          if (jump.url) return;
           const info = stepNums[jump.targetStepId] || { label: "?", type: "error" };
           const isIrregular = info.type === "irregular";
           const btnClass = isIrregular ? " preview-jump-button-irregular" : "";

@@ -1324,43 +1324,6 @@ body.annotation-modal-open {
   background: #ddd6fe;
 }
 
-.preview-jump-button-external {
-  border-color: #0ea5e9;
-  background: #f0f9ff;
-  color: #0c4a6e;
-}
-
-.preview-jump-button-external:hover {
-  background: #e0f2fe;
-}
-
-.jump-tag-external {
-  border-color: #0ea5e9;
-  background: #f0f9ff;
-  color: #0c4a6e;
-}
-
-.jump-tag-external .jump-tag-remove {
-  color: #0c4a6e;
-}
-
-.jump-tag-external .jump-tag-remove:hover {
-  background: #0ea5e9;
-  color: #fff;
-}
-
-.jump-url-input {
-  flex: 1 1 auto;
-  min-width: 0;
-  max-width: 260px;
-  width: auto;
-}
-
-.jump-label-input {
-  flex: 0 0 auto;
-  width: 130px;
-}
-
 .markdown-output {
   min-height: 520px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
