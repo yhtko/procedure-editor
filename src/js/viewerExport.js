@@ -51,7 +51,7 @@
             }).join("") + '</div>'
           : "";
         return [
-          '<article class="viewer-block">',
+          '<article class="viewer-block" id="block-' + utils.escapeAttribute(block.id) + '">',
           '<h4>' + stepNum + "." + (blockIndex + 1) + " " + utils.escapeHtml(block.title || "") + "</h4>",
           block.text ? '<p>' + utils.textToHtml(block.text) + "</p>" : "",
           jumpsHtml,
@@ -125,6 +125,7 @@
       "</article>",
       "</main>",
       '<div id="imageModal" class="image-modal" aria-hidden="true"><button type="button" class="modal-close" aria-label="閉じる">×</button><div class="modal-body"></div></div>',
+      '<a id="viewerBackFloat" class="viewer-back-float" href="#" aria-label="元の操作に戻る"></a>',
       "<script>" + js + "</script>",
       dataComment,
       "</body>",
@@ -192,7 +193,9 @@
       ".content{border:1px solid #d7dee8;border-radius:8px;background:#fff;padding:28px;box-shadow:0 10px 24px rgba(15,23,42,.08)}",
       ".cover table{width:100%;border-collapse:collapse}.cover th,.cover td{border:1px solid #cbd5e1;padding:9px;text-align:left;vertical-align:top}.cover th{width:28%;background:#f1f5f9}",
       ".viewer-callout{margin:18px 0;padding:13px 15px;border:1px solid #f6d88a;border-left:5px solid #d97706;border-radius:8px;background:#fffbeb}.viewer-callout h2,.viewer-callout h4{margin:0 0 7px;color:#7c2d12;font-size:16px}.viewer-callout p{margin:0}",
-      ".viewer-step{margin-top:30px;padding-top:16px;border-top:3px solid #1e293b;scroll-margin-top:72px}.viewer-step-error{border-top-color:#d97706}.viewer-step-irregular{border-top-color:#7c3aed}.viewer-step>h3{margin:0 0 10px;font-size:22px;font-weight:900;letter-spacing:-.01em}.viewer-block{margin:18px 0 24px}.viewer-block h4{margin:0 0 6px;font-size:17px;font-weight:900}.viewer-block h4::before{content:'▶ ';color:#1e40af;font-size:.82em}.viewer-block-image{margin-left:1.5rem;padding-left:.75rem;border-left:3px solid #e2e8f0;margin-top:10px;display:inline-block;max-width:calc(100% - 1.5rem)}",
+      ".viewer-step{margin-top:30px;padding-top:16px;border-top:3px solid #1e293b;scroll-margin-top:72px}.viewer-step-error{border-top-color:#d97706}.viewer-step-irregular{border-top-color:#7c3aed}.viewer-step>h3{margin:0 0 10px;font-size:22px;font-weight:900;letter-spacing:-.01em}.viewer-block{margin:18px 0 24px;scroll-margin-top:72px}.viewer-block h4{margin:0 0 6px;font-size:17px;font-weight:900}.viewer-block h4::before{content:'▶ ';color:#1e40af;font-size:.82em}.viewer-block-image{margin-left:1.5rem;padding-left:.75rem;border-left:3px solid #e2e8f0;margin-top:10px;display:inline-block;max-width:calc(100% - 1.5rem)}",
+      ".viewer-back-float{position:fixed;bottom:24px;right:24px;z-index:50;display:none;align-items:center;gap:6px;padding:10px 20px;border-radius:999px;border:none;background:#1e293b;color:#fff;font:inherit;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 4px 18px rgba(15,23,42,.32);cursor:pointer;white-space:nowrap;transition:background .15s}.viewer-back-float:hover{background:#0f172a}",
+      "@media print{.viewer-back-float{display:none!important}}",
       ".viewer-error-section{margin-top:48px;padding-top:20px;border-top:3px solid #d97706}.viewer-error-section h2{color:#92400e;font-size:20px;margin:0 0 12px}",
       ".viewer-irregular-section{margin-top:48px;padding-top:20px;border-top:3px solid #7c3aed}.viewer-irregular-section h2{color:#5b21b6;font-size:20px;margin:0 0 12px}",
       ".viewer-jump-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}",
@@ -299,6 +302,22 @@
       "function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');body.innerHTML='';}",
       "document.addEventListener('click',function(e){var frame=e.target.closest('.viewer-image-frame');if(frame&&frame.closest('.content'))openModal(frame);if(e.target===modal||e.target.closest('.modal-close'))closeModal();});",
       "document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('viewer-image-frame')){e.preventDefault();openModal(e.target);}});",
+      "var backFloat=document.getElementById('viewerBackFloat');var jumpReturn=null;",
+      "document.addEventListener('click',function(e){",
+      "if(backFloat&&(e.target===backFloat||backFloat.contains(e.target))){jumpReturn=null;backFloat.style.display='none';return;}",
+      "var jb=e.target.closest('.viewer-jump-button');",
+      "if(jb){var bl=jb.closest('.viewer-block[id]'),st=jb.closest('[id^=\"step-\"]');jumpReturn=bl?'#'+bl.id:st?'#'+st.id:null;}",
+      "});",
+      "window.addEventListener('hashchange',function(){",
+      "var t=location.hash&&document.querySelector(location.hash);",
+      "var isTarget=t&&(t.classList.contains('viewer-step-irregular')||t.classList.contains('viewer-step-error'));",
+      "if(backFloat&&jumpReturn&&isTarget){",
+      "var src=document.querySelector(jumpReturn);",
+      "var h4=src&&src.querySelector('h4');",
+      "backFloat.textContent='← '+(h4?h4.textContent.trim():'元に戻る');",
+      "backFloat.href=jumpReturn;backFloat.style.display='flex';",
+      "}else{if(backFloat)backFloat.style.display='none';if(!isTarget)jumpReturn=null;}",
+      "});",
       "})();"
     ].join("");
   }
