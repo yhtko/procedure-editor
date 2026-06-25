@@ -173,7 +173,7 @@
         return [
           '<span class="jump-tag jump-tag-external">',
           '<span class="jump-icon">🔗</span>',
-          ' ' + utils.escapeHtml(jump.label || jump.url),
+          '<span class="jump-tag-text">' + utils.escapeHtml(jump.label || jump.url) + '</span>',
           '<button type="button" class="jump-tag-remove" data-action="delete-block-jump"',
           ' data-block-id="' + utils.escapeAttribute(block.id) + '"',
           ' data-jump-id="' + utils.escapeAttribute(jump.id) + '">×</button>',
@@ -187,7 +187,7 @@
       return [
         '<span class="' + tagClass + '">',
         '<span class="jump-icon">' + icon + '</span>',
-        ' ' + info.label + ': ' + utils.escapeHtml(jump.label || ""),
+        '<span class="jump-tag-text">' + info.label + ': ' + utils.escapeHtml(jump.label || "") + '</span>',
         '<button type="button" class="jump-tag-remove" data-action="delete-block-jump"',
         ' data-block-id="' + utils.escapeAttribute(block.id) + '"',
         ' data-jump-id="' + utils.escapeAttribute(jump.id) + '">×</button>',
@@ -215,7 +215,7 @@
 
     const externalAddHtml = [
       '<input type="url" class="jump-url-input" placeholder="https://..." data-external-jump-url data-block-id="' + utils.escapeAttribute(block.id) + '">',
-      '<input type="text" class="jump-label-input" placeholder="ラベル（任意）" data-external-jump-label data-block-id="' + utils.escapeAttribute(block.id) + '">',
+      '<input type="text" class="jump-label-input" placeholder="ラベル（必須）" data-external-jump-label data-block-id="' + utils.escapeAttribute(block.id) + '">',
       '<button type="button" class="small secondary" data-action="add-external-jump" data-block-id="' + utils.escapeAttribute(block.id) + '">追加</button>'
     ].join("");
 

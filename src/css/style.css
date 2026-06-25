@@ -1204,6 +1204,8 @@ body.annotation-modal-open {
   gap: 4px;
   padding: 4px 8px;
   border: 1.5px solid #d97706;
+  max-width: 100%;
+  overflow: hidden;
   border-radius: 999px;
   background: #fef3c7;
   color: #92400e;
@@ -1213,10 +1215,19 @@ body.annotation-modal-open {
 
 .jump-icon {
   font-style: normal;
+  flex-shrink: 0;
+}
+
+.jump-tag-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .jump-tag-remove {
   min-height: unset;
+  flex-shrink: 0;
   padding: 1px 5px;
   border-radius: 999px;
   background: transparent;

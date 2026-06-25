@@ -119,6 +119,7 @@
           const url = urlInput && urlInput.value.trim();
           const label = labelInput && labelInput.value.trim();
           if (!url) { utils.toast("URLを入力してください。"); return; }
+          if (!label) { utils.toast("ラベルを入力してください。"); return; }
           ns.blocks.addExternalJumpToBlock(actionNode.dataset.blockId, url, label);
           return;
         }
