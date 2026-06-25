@@ -1543,11 +1543,31 @@ body.annotation-modal-open {
   width: 100%;
 }
 
+.step-import-list input[type="checkbox"],
+.step-import-all-row input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+}
+
 .step-import-list .badge {
   font-size: 10px;
   padding: 1px 6px;
   min-width: 38px;
   flex-shrink: 0;
+}
+
+.step-import-title {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .step-import-foot {

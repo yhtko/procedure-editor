@@ -199,8 +199,8 @@
       const label = utils.escapeHtml(step.title || ("STEP " + (i + 1)));
       const badgeCls = "badge" + (typeClass[type] ? " " + typeClass[type] : "");
       return '<li><label><input type="checkbox" class="step-import-cb" data-step-id="' +
-        utils.escapeAttribute(step.id) + '" checked> <span class="' + badgeCls + '">' +
-        utils.escapeHtml(typeLabel[type] || type) + '</span> ' + label + '</label></li>';
+        utils.escapeAttribute(step.id) + '" checked><span class="' + badgeCls + '">' +
+        utils.escapeHtml(typeLabel[type] || type) + '</span><span class="step-import-title">' + label + '</span></label></li>';
     }).join("");
 
     selectAll.checked = true;
