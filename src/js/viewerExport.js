@@ -26,17 +26,21 @@
     irregularSteps.forEach(function (s, i) { stepNums[s.id] = { label: "非定常 " + (i + 1), type: "irregular" }; });
     errorSteps.forEach(function (s, i) { stepNums[s.id] = { label: "エラー対応 " + (i + 1), type: "error" }; });
 
+    function tocEntry(href, stepId, label) {
+      return '<li><a href="' + href + '">' + label + '</a><button class="step-copy-url" data-step-id="' + utils.escapeAttribute(stepId) + '" title="このSTEPのURLをコピー">🔗</button></li>';
+    }
+
     const normalToc = normalSteps.map(function (step, i) {
-      return '<li><a href="#step-' + utils.escapeAttribute(step.id) + '">STEP ' + (i + 1) + " " + utils.escapeHtml(step.title || "") + "</a></li>";
+      return tocEntry('#step-' + step.id, step.id, 'STEP ' + (i + 1) + ' ' + utils.escapeHtml(step.title || ''));
     }).join("");
     const irregularToc = irregularSteps.length
       ? '<li class="toc-section-label toc-irregular-label">非定常業務手順</li>' + irregularSteps.map(function (step, i) {
-          return '<li><a href="#step-' + utils.escapeAttribute(step.id) + '">非定常 ' + (i + 1) + " " + utils.escapeHtml(step.title || "") + "</a></li>";
+          return tocEntry('#step-' + step.id, step.id, '非定常 ' + (i + 1) + ' ' + utils.escapeHtml(step.title || ''));
         }).join("")
       : "";
     const errorToc = errorSteps.length
       ? '<li class="toc-section-label toc-error-label">エラー対応手順</li>' + errorSteps.map(function (step, i) {
-          return '<li><a href="#step-' + utils.escapeAttribute(step.id) + '">エラー対応 ' + (i + 1) + " " + utils.escapeHtml(step.title || "") + "</a></li>";
+          return tocEntry('#step-' + step.id, step.id, 'エラー対応 ' + (i + 1) + ' ' + utils.escapeHtml(step.title || ''));
         }).join("")
       : "";
     const toc = normalToc + irregularToc + errorToc;
@@ -68,7 +72,7 @@
       const typeClass = stepType === "error" ? " viewer-step-error" : stepType === "irregular" ? " viewer-step-irregular" : "";
       return [
         '<section id="step-' + utils.escapeAttribute(step.id) + '" class="viewer-step' + typeClass + '">',
-        '<h3>' + label + " " + utils.escapeHtml(step.title || "") + ' <button class="step-copy-url" data-step-id="' + utils.escapeAttribute(step.id) + '" title="このSTEPのURLをコピー">🔗</button></h3>',
+        '<h3>' + label + " " + utils.escapeHtml(step.title || "") + "</h3>",
         step.screen ? '<p><strong>画面名:</strong> ' + utils.escapeHtml(step.screen) + "</p>" : "",
         step.summary ? '<p>' + utils.textToHtml(step.summary) + "</p>" : "",
         step.check ? '<aside class="viewer-callout viewer-callout-warning"><h4>注意・確認ポイント</h4><p>' + utils.textToHtml(step.check) + "</p></aside>" : "",
@@ -207,7 +211,7 @@
       ".viewer-jump-button{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;border:1.5px solid #d97706;background:#fffbeb;color:#92400e;font:inherit;font-size:13px;font-weight:700;text-decoration:none;cursor:pointer}.viewer-jump-button:hover{background:#fef3c7}",
       ".viewer-jump-button-irregular{border-color:#7c3aed;background:#ede9fe;color:#5b21b6}.viewer-jump-button-irregular:hover{background:#ddd6fe}",
       ".viewer-jump-button-external{border-color:#0ea5e9;background:#f0f9ff;color:#0c4a6e}.viewer-jump-button-external:hover{background:#e0f2fe}",
-      ".step-copy-url{background:transparent;border:0;cursor:pointer;padding:2px 5px;font-size:13px;opacity:0;transition:opacity .15s;vertical-align:middle}.viewer-step:hover .step-copy-url,.step-copy-url:focus{opacity:1}",
+      ".step-copy-url{background:transparent;border:0;cursor:pointer;padding:2px 5px;font-size:12px;opacity:0;transition:opacity .15s;vertical-align:middle}.toc li:hover .step-copy-url,.step-copy-url:focus{opacity:1}",
       ".toc-section-label{margin:10px 0 4px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;list-style:none;padding-left:0}",
       ".toc-error-label{color:#92400e}.toc-irregular-label{color:#5b21b6}",
       ".viewer-image-frame{display:inline-block;max-width:100%;margin:10px 0 0;cursor:zoom-in}.viewer-image-frame figcaption{margin-top:4px;color:#667085;font-size:12px}.annotated-image{position:relative;display:inline-block;line-height:0;max-width:100%}.annotated-image img{display:block;max-width:100%;border:1px solid #cbd5e1;border-radius:6px;background:#fff}",
